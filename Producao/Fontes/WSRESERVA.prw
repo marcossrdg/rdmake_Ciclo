@@ -198,8 +198,9 @@ Static Function fBuscarSerial(cSerial, cVend)
     Local cValidade := ""
     Local cVendPed  := ""
     Local cCondPag  := ""
+    Local cFilSerial := ""
 
-    ConOut("[WSRESERVA] fBuscarSerial - cFilAnt=[" + cFilAnt + "] xFilial SDB=[" + xFilial("SDB") + "] SB6=[" + xFilial("SB6") + "]")
+    ConOut("[WSRESERVA] fBuscarSerial INICIO - Serial:[" + cSerial + "] Vend:[" + cVend + "] cFilAnt=[" + cFilAnt + "] cEmpAnt=[" + cEmpAnt + "]")
 
     // Busca serial na SDB (mesmo criterio do CHKITEMPV) - busca simples primeiro
     cQry := " SELECT TOP 1 "
@@ -216,13 +217,14 @@ Static Function fBuscarSerial(cSerial, cVend)
     cQry += "   RTRIM(DB.DB_TM)      AS TES, "
     cQry += "   RTRIM(DB.DB_NUMSEQ)  AS DOCNUMSEQ, "
     cQry += "   DB.DB_DATA           AS NFEMISSAO, "
+    cQry += "   RTRIM(DB.DB_FILIAL)  AS DB_FILIAL, "
     cQry += "   COALESCE(D2.D2_PRCVEN,0) AS D2_PRCVEN, "
     cQry += "   COALESCE(RTRIM(D2.D2_VEND1),'') AS VEND1, "
     cQry += "   COALESCE(RTRIM(D2.D2_PEDIDO),'') AS PEDIDO_ORIG, "
     cQry += "   COALESCE(RTRIM(D2.D2_IDENTB6),'') AS D2_IDENTB6, "
     cQry += "   RTRIM(B1.B1_DESC)    AS DESC_PROD, "
     cQry += "   COALESCE((SELECT TOP 1 C6_NUM FROM " + RetSqlName("SC6") + " SC6 "
-    cQry += "     WHERE SC6.D_E_L_E_T_='' AND SC6.C6_FILIAL='" + cFilAnt + "' "
+    cQry += "     WHERE SC6.D_E_L_E_T_='' AND SC6.C6_FILIAL=DB.DB_FILIAL "
     cQry += "     AND SC6.C6_NUMSERI=DB.DB_NUMSERI AND SC6.C6_QTDENT=0),'      ') AS PEDIDO "
     // Tabela principal: SDB (mesmo criterio CHKITEMPV)
     cQry += " FROM " + RetSqlName("SDB") + " DB WITH (NOLOCK) "
@@ -233,26 +235,26 @@ Static Function fBuscarSerial(cSerial, cVend)
     // JOIN SB1 para descricao do produto
     cQry += " INNER JOIN " + RetSqlName("SB1") + " B1 WITH (NOLOCK) "
     cQry += "   ON B1.D_E_L_E_T_ = '' AND B1.B1_COD = DB.DB_PRODUTO "
-    // Filtros: mesmo criterio CHKITEMPV - sem filtro de origem, sem estorno
+    // Filtros: sem filtro de filial para garantir encontrar o serial
     cQry += " WHERE DB.D_E_L_E_T_ = '' "
-    cQry += "   AND DB.DB_FILIAL = '" + cFilAnt + "' "
     cQry += "   AND DB.DB_NUMSERI = '" + cSerial + "' "
     cQry += "   AND DB.DB_ESTORNO <> 'S' "
     cQry += " ORDER BY DB.DB_DATA DESC, DB.DB_IDOPERA DESC "
 
     dbUseArea(.T., "TOPCONN", TCGenQry(,,cQry), cAlias, .F., .T.)
 
-    // Trava 1: Serial nao existe nesta filial
+    // Trava 1: Serial nao existe
     If (cAlias)->(Eof())
-        ConOut("[WSRESERVA] TRAVA 1 - Serial NAO encontrado na SDB. cFilAnt=[" + cFilAnt + "]")
+        ConOut("[WSRESERVA] TRAVA 1 - Serial NAO encontrado na SDB")
         (cAlias)->(dbCloseArea())
         RestArea(aArea)
-        Return '{"ok":false,"msg":"Serial nao encontrado nesta filial (fil='+cFilAnt+')"}'
+        Return '{"ok":false,"msg":"Serial nao encontrado em nenhuma filial"}'
     Else
-        ConOut("[WSRESERVA] SDB encontrou - Produto: " + AllTrim((cAlias)->PRODUTO) + " Cliente: " + AllTrim((cAlias)->CLIFOR))
+        ConOut("[WSRESERVA] SDB encontrou - Produto: " + AllTrim((cAlias)->PRODUTO) + " Cliente: " + AllTrim((cAlias)->CLIFOR) + " Filial: " + AllTrim((cAlias)->DB_FILIAL))
     EndIf
 
     // Guarda dados do registro encontrado
+    cFilSerial := AllTrim((cAlias)->DB_FILIAL)
     cProduto  := AllTrim((cAlias)->PRODUTO)
     cLote     := AllTrim((cAlias)->LOTE)
     cSerFull  := AllTrim((cAlias)->SERIAL_FULL)
@@ -307,7 +309,7 @@ Static Function fBuscarSerial(cSerial, cVend)
     cQryB6 += "   ON SC5.D_E_L_E_T_ = '' AND SC5.C5_FILIAL = D2B.D2_FILIAL "
     cQryB6 += "   AND SC5.C5_NUM = D2B.D2_PEDIDO "
     cQryB6 += " WHERE B6.D_E_L_E_T_ = '' "
-    cQryB6 += "   AND B6.B6_FILIAL = '" + cFilAnt + "' "
+    cQryB6 += "   AND B6.B6_FILIAL = '" + cFilSerial + "' "
     cQryB6 += "   AND B6.B6_PRODUTO = '" + cProduto + "' "
     cQryB6 += "   AND B6.B6_CLIFOR = '" + cCliFor + "' "
     cQryB6 += "   AND B6.B6_LOJA = '" + cLoja + "' "
@@ -317,7 +319,7 @@ Static Function fBuscarSerial(cSerial, cVend)
 
     // Trava 3: Nao tem consignacao ativa na SB6
     If (cAliasB6)->(Eof())
-        ConOut("[WSRESERVA] TRAVA 3 - SB6 vazio. Produto: " + cProduto + " CliFor: " + cCliFor + " Loja: " + cLoja + " cFilAnt=[" + cFilAnt + "]")
+        ConOut("[WSRESERVA] TRAVA 3 - SB6 vazio. Produto: " + cProduto + " CliFor: " + cCliFor + " Loja: " + cLoja + " FilSerial=[" + cFilSerial + "]")
         (cAliasB6)->(dbCloseArea())
         RestArea(aArea)
         // Se tem DOC na SDB, o serial ja foi baixado
