@@ -541,9 +541,53 @@ Static Function fCriarReserva(oJson)
         ConfirmSX8()
         EndTran()
 
+        //--- Salvar fotos na ZZ1010 ---
+        fSalvarFotos(oJson, cNumPed, cVend, cFil)
+
         ConOut("[WSRESERVA] Reserva " + cNumPed + " gerada com sucesso!")
         cJson := '{"ok":true,"pedido":"' + cNumPed + '","msg":"Reserva gerada com sucesso"}'
     EndIf
 
     RestArea(aArea)
 Return cJson
+
+//=====================================================================
+// fSalvarFotos - Salva fotos de documentos na ZZ1010
+//=====================================================================
+Static Function fSalvarFotos(oJson, cPedido, cVend, cFil)
+    Local aFotos   := oJson:GetJsonObject("fotos")
+    Local oFoto    := Nil
+    Local cBase64  := ""
+    Local cDesc    := ""
+    Local cSeq     := ""
+    Local cData    := DtoS(Date())
+    Local cHora    := SubStr(Time(), 1, 5)
+    Local cSQL     := ""
+    Local nI       := 0
+
+    If aFotos == Nil .Or. Len(aFotos) == 0
+        Return
+    EndIf
+
+    For nI := 1 To Len(aFotos)
+        oFoto   := aFotos[nI]
+        cBase64 := AllTrim(oFoto:GetJsonObject("base64"))
+        cDesc   := AllTrim(oFoto:GetJsonObject("desc"))
+        cSeq    := StrZero(nI, 3)
+
+        // Remover prefixo data:image/jpeg;base64, se existir
+        If "base64," $ cBase64
+            cBase64 := SubStr(cBase64, At("base64,", cBase64) + 7)
+        EndIf
+
+        cSQL := "INSERT INTO ZZ1010 (ZZ1_FILIAL, ZZ1_PEDIDO, ZZ1_SEQ, ZZ1_DESC, ZZ1_DATA, ZZ1_HORA, ZZ1_VEND, ZZ1_IMAGEM) "
+        cSQL += "VALUES ('" + cFil + "', '" + cPedido + "', '" + cSeq + "', '" + cDesc + "', '" + cData + "', '" + cHora + "', '" + cVend + "', '" + cBase64 + "')"
+
+        If TCSqlExec(cSQL) < 0
+            ConOut("[WSRESERVA] Erro ao salvar foto " + cSeq + " do pedido " + cPedido)
+        Else
+            ConOut("[WSRESERVA] Foto " + cSeq + " salva para pedido " + cPedido)
+        EndIf
+    Next
+
+Return

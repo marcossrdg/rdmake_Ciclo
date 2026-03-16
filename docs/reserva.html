@@ -197,6 +197,51 @@
         #reader { width: 100%; }
         #reader video { border-radius: var(--radius); }
 
+        /* FOTOS DOCUMENTOS */
+        .fotos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .foto-thumb {
+            position: relative;
+            aspect-ratio: 3/4;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid var(--gray-200);
+        }
+        .foto-thumb img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .foto-thumb .foto-remove {
+            position: absolute; top: 4px; right: 4px;
+            width: 24px; height: 24px; border-radius: 50%;
+            background: var(--danger); color: white;
+            border: none; font-size: 14px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-foto {
+            aspect-ratio: 3/4;
+            border: 2px dashed var(--gray-500);
+            border-radius: 8px;
+            background: var(--gray-100);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: var(--gray-500);
+            font-size: 12px;
+        }
+        .btn-foto svg { opacity: 0.5; }
+        .foto-counter {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-top: 4px;
+        }
+
         /* ITEM LISTA */
         .item-reserva {
             background: white;
@@ -480,6 +525,18 @@
                 <label>Observação</label>
                 <textarea id="inputObs" placeholder="Obs. para nota"></textarea>
             </div>
+            <div class="form-group">
+                <label>Documentos / Assinaturas</label>
+                <div class="fotos-grid" id="fotosGrid">
+                    <label class="btn-foto" id="btnAddFoto">
+                        <svg width="28" height="28" fill="currentColor" viewBox="0 0 16 16"><path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"/></svg>
+                        Tirar Foto
+                        <input type="file" accept="image/*" capture="environment" multiple
+                               style="display:none" onchange="adicionarFotos(this.files)">
+                    </label>
+                </div>
+                <div class="foto-counter" id="fotoCounter"></div>
+            </div>
         </div>
 
         <!-- Resumo e botão -->
@@ -556,6 +613,7 @@ let usuario = null;
 let itensReserva = [];
 let serialAtual = null;
 let historicoReservas = [];
+let fotosDocumentos = [];  // array de { base64, nome }
 
 // ============================================================
 // API HELPER
@@ -763,6 +821,68 @@ function pararScanner() {
 }
 
 // ============================================================
+// FOTOS DOCUMENTOS
+// ============================================================
+function adicionarFotos(files) {
+    Array.from(files).forEach(file => {
+        if (fotosDocumentos.length >= 10) {
+            showToast('Máximo 10 fotos', 'error');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            // Redimensionar para max 1200px
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX = 1200;
+                let w = img.width, h = img.height;
+                if (w > MAX || h > MAX) {
+                    if (w > h) { h = h * MAX / w; w = MAX; }
+                    else { w = w * MAX / h; h = MAX; }
+                }
+                canvas.width = w;
+                canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                const base64 = canvas.toDataURL('image/jpeg', 0.7);
+                fotosDocumentos.push({
+                    base64: base64,
+                    nome: 'DOC_' + String(fotosDocumentos.length + 1).padStart(2, '0')
+                });
+                renderizarFotos();
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+    // Limpar input pra permitir selecionar mesma foto
+    document.querySelector('#btnAddFoto input').value = '';
+}
+
+function removerFoto(idx) {
+    fotosDocumentos.splice(idx, 1);
+    renderizarFotos();
+}
+
+function renderizarFotos() {
+    const grid = document.getElementById('fotosGrid');
+    const counter = document.getElementById('fotoCounter');
+    // Limpar thumbs existentes (manter btn)
+    grid.querySelectorAll('.foto-thumb').forEach(el => el.remove());
+    // Inserir thumbs antes do botão
+    const btnAdd = document.getElementById('btnAddFoto');
+    fotosDocumentos.forEach((foto, i) => {
+        const div = document.createElement('div');
+        div.className = 'foto-thumb';
+        div.innerHTML = `<img src="${foto.base64}" alt="${foto.nome}"><button class="foto-remove" onclick="removerFoto(${i})">&times;</button>`;
+        grid.insertBefore(div, btnAdd);
+    });
+    counter.textContent = fotosDocumentos.length > 0 ? fotosDocumentos.length + ' foto(s) anexada(s)' : '';
+    // Esconder botão se atingiu limite
+    btnAdd.style.display = fotosDocumentos.length >= 10 ? 'none' : '';
+}
+
+// ============================================================
 // BUSCAR SERIAL
 // ============================================================
 async function buscarSerial() {
@@ -939,6 +1059,7 @@ async function confirmarReserva() {
         codConvenio: '',
         dtUso: dtFormatada,
         mennota: document.getElementById('inputObs').value.trim(),
+        fotos: fotosDocumentos.map(f => ({ base64: f.base64, desc: f.nome })),
         itens: itensReserva.map(item => ({
             serial: item.serial.trim(),
             produto: item.produto,
@@ -983,6 +1104,8 @@ async function confirmarReserva() {
             document.getElementById('inputConvenio').value = '';
             document.getElementById('inputObs').value = '';
             document.getElementById('inputDtUso').valueAsDate = new Date();
+            fotosDocumentos = [];
+            renderizarFotos();
             renderizarItens();
             limparBusca();
 
