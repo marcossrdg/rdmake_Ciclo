@@ -168,6 +168,7 @@ Return cJson
 Static Function fBuscarSerial(cSerial, cVend)
     Local cJson   := ""
     Local cQry    := ""
+    ConOut("[WSRESERVA] fBuscarSerial INICIO - Serial: " + cSerial + " Vend: " + cVend)
     Local cAlias  := GetNextAlias()
     Local aArea   := GetArea()
     Local cProduto  := ""
@@ -197,6 +198,8 @@ Static Function fBuscarSerial(cSerial, cVend)
     Local cValidade := ""
     Local cVendPed  := ""
     Local cCondPag  := ""
+
+    ConOut("[WSRESERVA] xFilial SDB=[" + xFilial("SDB") + "] SB6=[" + xFilial("SB6") + "] SC6=[" + xFilial("SC6") + "]")
 
     // Busca serial na SDB (mesmo criterio do CHKITEMPV) - busca simples primeiro
     cQry := " SELECT TOP 1 "
@@ -241,9 +244,12 @@ Static Function fBuscarSerial(cSerial, cVend)
 
     // Trava 1: Serial nao existe nesta filial
     If (cAlias)->(Eof())
+        ConOut("[WSRESERVA] TRAVA 1 - Serial NAO encontrado na SDB. Filial filtrada: [" + xFilial("SDB") + "]")
         (cAlias)->(dbCloseArea())
         RestArea(aArea)
-        Return '{"ok":false,"msg":"Serial nao encontrado nesta filial"}'
+        Return '{"ok":false,"msg":"Serial nao encontrado nesta filial (xFilial='+xFilial('SDB')+')"}'
+    Else
+        ConOut("[WSRESERVA] SDB encontrou - Produto: " + AllTrim((cAlias)->PRODUTO) + " Cliente: " + AllTrim((cAlias)->CLIFOR))
     EndIf
 
     // Guarda dados do registro encontrado
@@ -311,6 +317,7 @@ Static Function fBuscarSerial(cSerial, cVend)
 
     // Trava 3: Nao tem consignacao ativa na SB6
     If (cAliasB6)->(Eof())
+        ConOut("[WSRESERVA] TRAVA 3 - SB6 vazio. Produto: " + cProduto + " CliFor: " + cCliFor + " Loja: " + cLoja + " xFilial SB6: [" + xFilial("SB6") + "]")
         (cAliasB6)->(dbCloseArea())
         RestArea(aArea)
         // Se tem DOC na SDB, o serial ja foi baixado
