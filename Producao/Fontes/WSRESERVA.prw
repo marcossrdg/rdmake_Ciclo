@@ -170,108 +170,196 @@ Static Function fBuscarSerial(cSerial, cVend)
     Local cQry    := ""
     Local cAlias  := GetNextAlias()
     Local aArea   := GetArea()
+    Local cProduto  := ""
+    Local cLote     := ""
+    Local cSerFull  := ""
+    Local cCliFor   := ""
+    Local cLoja     := ""
+    Local cArmaz    := ""
+    Local cOrigem   := ""
+    Local cDocDB    := ""
+    Local cSerieDB  := ""
+    Local cDescProd := ""
+    Local nPrcVen   := 0
+    Local cPedOrig  := ""
+    Local cIdentB6  := ""
+    Local cPedido   := ""
+    Local cAliasB6  := ""
+    Local cQryB6    := ""
+    Local cNfRem    := ""
+    Local cSerNF    := ""
+    Local cDtRem    := ""
+    Local nPreco    := 0
+    Local cArmB6    := ""
+    Local cIdentB   := ""
+    Local cFilB6    := ""
+    Local cNomeCli  := ""
+    Local cValidade := ""
+    Local cVendPed  := ""
+    Local cCondPag  := ""
 
-    // Busca serial na SDB (entrada original) para pegar produto e lote
-    // Depois cruza com SB6 para confirmar que está em consignação
+    // Busca serial na SDB (mesmo criterio do CHKITEMPV) - busca simples primeiro
     cQry := " SELECT TOP 1 "
     cQry += "   RTRIM(DB.DB_PRODUTO) AS PRODUTO, "
     cQry += "   RTRIM(DB.DB_LOTECTL) AS LOTE, "
     cQry += "   RTRIM(DB.DB_NUMSERI) AS SERIAL_FULL, "
-    cQry += "   RTRIM(B6.B6_CLIFOR)  AS CLIENTE, "
-    cQry += "   RTRIM(B6.B6_LOJA)    AS LOJA, "
-    cQry += "   RTRIM(B6.B6_DOC)     AS NF_REMESSA, "
-    cQry += "   RTRIM(B6.B6_SERIE)   AS SERIE_NF, "
-    cQry += "   B6.B6_EMISSAO        AS DT_REMESSA, "
-    cQry += "   B6.B6_PRUNIT         AS PRECO, "
-    cQry += "   RTRIM(B6.B6_LOCAL)   AS ARMAZEM, "
-    cQry += "   RTRIM(B6.B6_IDENT)   AS IDENT_B6, "
-    cQry += "   B6.B6_SALDO          AS SALDO, "
-    cQry += "   RTRIM(B6.B6_FILIAL)  AS FILIAL, "
+    cQry += "   RTRIM(DB.DB_CLIFOR)  AS CLIFOR, "
+    cQry += "   RTRIM(DB.DB_LOJA)    AS LOJA, "
+    cQry += "   RTRIM(DB.DB_LOCAL)   AS ARMAZ, "
+    cQry += "   RTRIM(DB.DB_LOCALIZ) AS LOCALIZ, "
+    cQry += "   DB.DB_ORIGEM         AS DB_ORIGEM, "
+    cQry += "   RTRIM(DB.DB_DOC)     AS DB_DOC, "
+    cQry += "   RTRIM(DB.DB_SERIE)   AS DB_SERIE, "
+    cQry += "   RTRIM(DB.DB_TM)      AS TES, "
+    cQry += "   RTRIM(DB.DB_NUMSEQ)  AS DOCNUMSEQ, "
+    cQry += "   DB.DB_DATA           AS NFEMISSAO, "
+    cQry += "   COALESCE(D2.D2_PRCVEN,0) AS D2_PRCVEN, "
+    cQry += "   COALESCE(RTRIM(D2.D2_VEND1),'') AS VEND1, "
+    cQry += "   COALESCE(RTRIM(D2.D2_PEDIDO),'') AS PEDIDO_ORIG, "
+    cQry += "   COALESCE(RTRIM(D2.D2_IDENTB6),'') AS D2_IDENTB6, "
     cQry += "   RTRIM(B1.B1_DESC)    AS DESC_PROD, "
-    cQry += "   RTRIM(A1.A1_NOME)    AS NOME_CLI, "
-    cQry += "   RTRIM(A1.A1_NREDUZ)  AS NREDUZ_CLI, "
-    cQry += "   RTRIM(B8.B8_DTVALID) AS VALIDADE, "
-    cQry += "   RTRIM(D2.D2_PEDIDO)  AS PEDIDO_ORIG, "
-    cQry += "   RTRIM(D2.D2_IDENTB6) AS D2_IDENTB6, "
-    cQry += "   RTRIM(SC5.C5_VEND1)  AS VENDEDOR_PED, "
-    cQry += "   RTRIM(SC5.C5_CONDPAG) AS CONDPAG "
+    cQry += "   COALESCE((SELECT TOP 1 C6_NUM FROM " + RetSqlName("SC6") + " SC6 "
+    cQry += "     WHERE SC6.D_E_L_E_T_='' AND SC6.C6_FILIAL='" + xFilial("SC6") + "' "
+    cQry += "     AND SC6.C6_NUMSERI=DB.DB_NUMSERI AND SC6.C6_QTDENT=0),'      ') AS PEDIDO "
+    // Tabela principal: SDB (mesmo criterio CHKITEMPV)
     cQry += " FROM " + RetSqlName("SDB") + " DB WITH (NOLOCK) "
-    // JOIN SB6 pelo produto+cliente+lote+NF para confirmar consignação
-    cQry += " INNER JOIN " + RetSqlName("SD2") + " D2 WITH (NOLOCK) "
+    // LEFT JOIN SD2 pelo NUMSEQ (mesmo criterio CHKITEMPV)
+    cQry += " LEFT JOIN " + RetSqlName("SD2") + " D2 WITH (NOLOCK) "
     cQry += "   ON D2.D_E_L_E_T_ = '' AND D2.D2_FILIAL = DB.DB_FILIAL "
-    cQry += "   AND D2.D2_COD = DB.DB_PRODUTO AND D2.D2_NUMSERI = DB.DB_NUMSERI "
-    cQry += "   AND D2.D2_DOC = DB.DB_DOC AND D2.D2_SERIE = DB.DB_SERIE "
-    cQry += " INNER JOIN " + RetSqlName("SB6") + " B6 WITH (NOLOCK) "
-    cQry += "   ON B6.D_E_L_E_T_ = '' AND B6.B6_FILIAL = D2.D2_FILIAL "
-    cQry += "   AND B6.B6_PRODUTO = D2.D2_COD AND B6.B6_CLIFOR = D2.D2_CLIENTE "
-    cQry += "   AND B6.B6_LOJA = D2.D2_LOJA AND B6.B6_IDENT = D2.D2_IDENTB6 "
-    cQry += "   AND B6.B6_SALDO > 0 AND B6.B6_PODER3 = 'R' "
-    // JOIN SB1 para descrição do produto
+    cQry += "   AND D2.D2_NUMSEQ = DB.DB_NUMSEQ "
+    // JOIN SB1 para descricao do produto
     cQry += " INNER JOIN " + RetSqlName("SB1") + " B1 WITH (NOLOCK) "
     cQry += "   ON B1.D_E_L_E_T_ = '' AND B1.B1_COD = DB.DB_PRODUTO "
-    // JOIN SA1 para nome do cliente
-    cQry += " LEFT JOIN " + RetSqlName("SA1") + " A1 WITH (NOLOCK) "
-    cQry += "   ON A1.D_E_L_E_T_ = '' AND A1.A1_COD = B6.B6_CLIFOR AND A1.A1_LOJA = B6.B6_LOJA "
-    // JOIN SB8 para validade do lote
-    cQry += " LEFT JOIN " + RetSqlName("SB8") + " B8 WITH (NOLOCK) "
-    cQry += "   ON B8.D_E_L_E_T_ = '' AND B8.B8_PRODUTO = DB.DB_PRODUTO "
-    cQry += "   AND B8.B8_LOTECTL = DB.DB_LOTECTL AND B8.B8_LOCAL = B6.B6_LOCAL "
-    cQry += "   AND B8.B8_FILIAL = B6.B6_FILIAL "
-    // JOIN SC5 para pegar vendedor e cond.pgto do pedido original
-    cQry += " LEFT JOIN " + RetSqlName("SC5") + " SC5 WITH (NOLOCK) "
-    cQry += "   ON SC5.D_E_L_E_T_ = '' AND SC5.C5_FILIAL = D2.D2_FILIAL "
-    cQry += "   AND SC5.C5_NUM = D2.D2_PEDIDO "
-    // Filtros
+    // Filtros: mesmo criterio CHKITEMPV - sem filtro de origem, sem estorno
     cQry += " WHERE DB.D_E_L_E_T_ = '' "
-    cQry += "   AND RTRIM(DB.DB_NUMSERI) = '" + cSerial + "' "
-    cQry += "   AND DB.DB_ORIGEM = 'SD2' "
-    // Só consignação ativa (sem devolução)
-    cQry += "   AND NOT EXISTS ( "
-    cQry += "     SELECT 1 FROM " + RetSqlName("SD1") + " DEV WITH (NOLOCK) "
-    cQry += "     INNER JOIN " + RetSqlName("SF4") + " TES WITH (NOLOCK) "
-    cQry += "       ON TES.D_E_L_E_T_ = '' AND TES.F4_CODIGO = DEV.D1_TES AND TES.F4_TEXTO LIKE '%DEV%' "
-    cQry += "     WHERE DEV.D_E_L_E_T_ = '' AND DEV.D1_IDENTB6 = B6.B6_IDENT "
-    cQry += "   ) "
-    // Sem reserva ativa existente
-    cQry += "   AND NOT EXISTS ( "
-    cQry += "     SELECT 1 FROM " + RetSqlName("SC6") + " RES WITH (NOLOCK) "
-    cQry += "     INNER JOIN " + RetSqlName("SC5") + " R5 WITH (NOLOCK) "
-    cQry += "       ON R5.D_E_L_E_T_ = '' AND R5.C5_FILIAL = RES.C6_FILIAL AND R5.C5_NUM = RES.C6_NUM "
-    cQry += "     WHERE RES.D_E_L_E_T_ = '' AND LEFT(RES.C6_NUM, 1) = 'R' "
-    cQry += "     AND RES.C6_NUMSERI = DB.DB_NUMSERI AND RES.C6_PRODUTO = DB.DB_PRODUTO "
-    cQry += "     AND RES.C6_BLQ <> 'R' AND RES.C6_QTDENT = 0 "
-    cQry += "   ) "
-    cQry += " ORDER BY DB.DB_DATA DESC "
+    cQry += "   AND DB.DB_FILIAL = '" + xFilial("SDB") + "' "
+    cQry += "   AND DB.DB_NUMSERI = '" + cSerial + "' "
+    cQry += "   AND DB.DB_ESTORNO <> 'S' "
+    cQry += " ORDER BY DB.DB_DATA DESC, DB.DB_IDOPERA DESC "
 
     dbUseArea(.T., "TOPCONN", TCGenQry(,,cQry), cAlias, .F., .T.)
 
+    // Trava 1: Serial nao existe nesta filial
     If (cAlias)->(Eof())
         (cAlias)->(dbCloseArea())
         RestArea(aArea)
-        Return '{"ok":false,"msg":"Serial nao encontrado em consignacao ou ja reservado"}'
+        Return '{"ok":false,"msg":"Serial nao encontrado nesta filial"}'
     EndIf
 
-    cJson := '{"ok":true,'
-    cJson += '"serial":"'      + AllTrim((cAlias)->SERIAL_FULL) + '",'
-    cJson += '"produto":"'     + AllTrim((cAlias)->PRODUTO) + '",'
-    cJson += '"descProduto":"' + EncodeUTF8(AllTrim((cAlias)->DESC_PROD)) + '",'
-    cJson += '"lote":"'        + AllTrim((cAlias)->LOTE) + '",'
-    cJson += '"validade":"'    + AllTrim((cAlias)->VALIDADE) + '",'
-    cJson += '"cliente":"'     + AllTrim((cAlias)->CLIENTE) + '",'
-    cJson += '"loja":"'        + AllTrim((cAlias)->LOJA) + '",'
-    cJson += '"nomeCli":"'     + EncodeUTF8(AllTrim((cAlias)->NREDUZ_CLI)) + '",'
-    cJson += '"nfRemessa":"'   + AllTrim((cAlias)->NF_REMESSA) + '",'
-    cJson += '"serieNF":"'     + AllTrim((cAlias)->SERIE_NF) + '",'
-    cJson += '"dtRemessa":"'   + AllTrim((cAlias)->DT_REMESSA) + '",'
-    cJson += '"preco":'        + AllTrim(Str((cAlias)->PRECO)) + ','
-    cJson += '"armazem":"'     + AllTrim((cAlias)->ARMAZEM) + '",'
-    cJson += '"filial":"'      + AllTrim((cAlias)->FILIAL) + '",'
-    cJson += '"identB6":"'     + AllTrim((cAlias)->IDENT_B6) + '",'
-    cJson += '"pedidoOrig":"'  + AllTrim((cAlias)->PEDIDO_ORIG) + '",'
-    cJson += '"condPag":"'     + AllTrim((cAlias)->CONDPAG) + '",'
-    cJson += '"vendedorPed":"' + AllTrim((cAlias)->VENDEDOR_PED) + '"}'
-
+    // Guarda dados do registro encontrado
+    cProduto  := AllTrim((cAlias)->PRODUTO)
+    cLote     := AllTrim((cAlias)->LOTE)
+    cSerFull  := AllTrim((cAlias)->SERIAL_FULL)
+    cCliFor   := AllTrim((cAlias)->CLIFOR)
+    cLoja     := AllTrim((cAlias)->LOJA)
+    cArmaz    := AllTrim((cAlias)->ARMAZ)
+    cOrigem   := AllTrim((cAlias)->DB_ORIGEM)
+    cDocDB    := AllTrim((cAlias)->DB_DOC)
+    cSerieDB  := AllTrim((cAlias)->DB_SERIE)
+    cDescProd := AllTrim((cAlias)->DESC_PROD)
+    nPrcVen   := (cAlias)->D2_PRCVEN
+    cPedOrig  := AllTrim((cAlias)->PEDIDO_ORIG)
+    cIdentB6  := AllTrim((cAlias)->D2_IDENTB6)
+    cPedido   := AllTrim((cAlias)->PEDIDO)
     (cAlias)->(dbCloseArea())
+
+    // Trava 2: Serial ja baixado/consignado para outro cliente (mesmo criterio CHKITEMPV)
+    // Se origem SC6 e tem DOC preenchido, significa que ja foi faturado/consignado
+    // Nesse caso precisamos checar na SB6 se tem consignacao ativa
+    // Se nao tem, o serial ja foi vendido/devolvido
+    cAliasB6 := GetNextAlias()
+    cQryB6   := ""
+    cQryB6 := " SELECT TOP 1 "
+    cQryB6 += "   RTRIM(B6.B6_CLIFOR)  AS CLIENTE, "
+    cQryB6 += "   RTRIM(B6.B6_LOJA)    AS LOJA, "
+    cQryB6 += "   RTRIM(B6.B6_DOC)     AS NF_REMESSA, "
+    cQryB6 += "   RTRIM(B6.B6_SERIE)   AS SERIE_NF, "
+    cQryB6 += "   B6.B6_EMISSAO        AS DT_REMESSA, "
+    cQryB6 += "   B6.B6_PRUNIT         AS PRECO, "
+    cQryB6 += "   RTRIM(B6.B6_LOCAL)   AS ARMAZEM, "
+    cQryB6 += "   RTRIM(B6.B6_IDENT)   AS IDENT_B6, "
+    cQryB6 += "   B6.B6_SALDO          AS SALDO, "
+    cQryB6 += "   RTRIM(B6.B6_FILIAL)  AS FILIAL, "
+    cQryB6 += "   B6.B6_PODER3         AS PODER3, "
+    cQryB6 += "   RTRIM(A1.A1_NOME)    AS NOME_CLI, "
+    cQryB6 += "   RTRIM(A1.A1_NREDUZ)  AS NREDUZ_CLI, "
+    cQryB6 += "   RTRIM(B8.B8_DTVALID) AS VALIDADE, "
+    cQryB6 += "   COALESCE(RTRIM(SC5.C5_VEND1),'') AS VENDEDOR_PED, "
+    cQryB6 += "   COALESCE(RTRIM(SC5.C5_CONDPAG),'') AS CONDPAG "
+    cQryB6 += " FROM " + RetSqlName("SB6") + " B6 WITH (NOLOCK) "
+    cQryB6 += " LEFT JOIN " + RetSqlName("SA1") + " A1 WITH (NOLOCK) "
+    cQryB6 += "   ON A1.D_E_L_E_T_ = '' AND A1.A1_COD = B6.B6_CLIFOR AND A1.A1_LOJA = B6.B6_LOJA "
+    cQryB6 += " LEFT JOIN " + RetSqlName("SB8") + " B8 WITH (NOLOCK) "
+    cQryB6 += "   ON B8.D_E_L_E_T_ = '' AND B8.B8_PRODUTO = B6.B6_PRODUTO "
+    cQryB6 += "   AND B8.B8_LOTECTL = B6.B6_LOTECTL AND B8.B8_LOCAL = B6.B6_LOCAL "
+    cQryB6 += "   AND B8.B8_FILIAL = B6.B6_FILIAL "
+    cQryB6 += " LEFT JOIN " + RetSqlName("SD2") + " D2B WITH (NOLOCK) "
+    cQryB6 += "   ON D2B.D_E_L_E_T_ = '' AND D2B.D2_FILIAL = B6.B6_FILIAL "
+    cQryB6 += "   AND D2B.D2_COD = B6.B6_PRODUTO AND D2B.D2_IDENTB6 = B6.B6_IDENT "
+    cQryB6 += "   AND D2B.D2_NUMSERI = '" + cSerial + "' "
+    cQryB6 += " LEFT JOIN " + RetSqlName("SC5") + " SC5 WITH (NOLOCK) "
+    cQryB6 += "   ON SC5.D_E_L_E_T_ = '' AND SC5.C5_FILIAL = D2B.D2_FILIAL "
+    cQryB6 += "   AND SC5.C5_NUM = D2B.D2_PEDIDO "
+    cQryB6 += " WHERE B6.D_E_L_E_T_ = '' "
+    cQryB6 += "   AND B6.B6_FILIAL = '" + xFilial("SB6") + "' "
+    cQryB6 += "   AND B6.B6_PRODUTO = '" + cProduto + "' "
+    cQryB6 += "   AND B6.B6_CLIFOR = '" + cCliFor + "' "
+    cQryB6 += "   AND B6.B6_LOJA = '" + cLoja + "' "
+    cQryB6 += "   AND B6.B6_SALDO > 0 AND B6.B6_PODER3 = 'R' "
+
+    dbUseArea(.T., "TOPCONN", TCGenQry(,,cQryB6), cAliasB6, .F., .T.)
+
+    // Trava 3: Nao tem consignacao ativa na SB6
+    If (cAliasB6)->(Eof())
+        (cAliasB6)->(dbCloseArea())
+        RestArea(aArea)
+        // Se tem DOC na SDB, o serial ja foi baixado
+        If !Empty(cDocDB)
+            Return '{"ok":false,"msg":"Serial ja foi baixado pelo Doc ' + cDocDB + '/' + cSerieDB + ' - nao esta mais em consignacao"}'
+        EndIf
+        Return '{"ok":false,"msg":"Serial nao encontrado em consignacao ativa"}'
+    EndIf
+
+    // Trava 4: Serial ja incluido em outro pedido de reserva
+    If !Empty(cPedido) .And. AllTrim(cPedido) <> ""
+        (cAliasB6)->(dbCloseArea())
+        RestArea(aArea)
+        Return '{"ok":false,"msg":"Serial ja incluido no Pedido ' + AllTrim(cPedido) + '. Exclua daquele pedido primeiro."}'
+    EndIf
+
+    // Tudo OK - monta JSON com dados da SB6
+    cNfRem    := AllTrim((cAliasB6)->NF_REMESSA)
+    cSerNF    := AllTrim((cAliasB6)->SERIE_NF)
+    cDtRem    := AllTrim((cAliasB6)->DT_REMESSA)
+    nPreco    := iif(nPrcVen > 0, nPrcVen, (cAliasB6)->PRECO)
+    cArmB6    := AllTrim((cAliasB6)->ARMAZEM)
+    cIdentB   := AllTrim((cAliasB6)->IDENT_B6)
+    cFilB6    := AllTrim((cAliasB6)->FILIAL)
+    cNomeCli  := AllTrim((cAliasB6)->NREDUZ_CLI)
+    cValidade := AllTrim((cAliasB6)->VALIDADE)
+    cVendPed  := AllTrim((cAliasB6)->VENDEDOR_PED)
+    cCondPag  := AllTrim((cAliasB6)->CONDPAG)
+    (cAliasB6)->(dbCloseArea())
+
+    cJson := '{"ok":true,'
+    cJson += '"serial":"'      + cSerFull + '",'
+    cJson += '"produto":"'     + cProduto + '",'
+    cJson += '"descProduto":"' + EncodeUTF8(cDescProd) + '",'
+    cJson += '"lote":"'        + cLote + '",'
+    cJson += '"validade":"'    + cValidade + '",'
+    cJson += '"cliente":"'     + cCliFor + '",'
+    cJson += '"loja":"'        + cLoja + '",'
+    cJson += '"nomeCli":"'     + EncodeUTF8(cNomeCli) + '",'
+    cJson += '"nfRemessa":"'   + cNfRem + '",'
+    cJson += '"serieNF":"'     + cSerNF + '",'
+    cJson += '"dtRemessa":"'   + cDtRem + '",'
+    cJson += '"preco":'        + AllTrim(Str(nPreco)) + ','
+    cJson += '"armazem":"'     + cArmB6 + '",'
+    cJson += '"filial":"'      + cFilB6 + '",'
+    cJson += '"identB6":"'     + cIdentB  + '",'
+    cJson += '"pedidoOrig":"'  + cPedOrig + '",'
+    cJson += '"condPag":"'     + cCondPag + '",'
+    cJson += '"vendedorPed":"' + cVendPed + '"}'
     RestArea(aArea)
 Return cJson
 

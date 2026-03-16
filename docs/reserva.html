@@ -15,91 +15,112 @@
         :root {
             --primary: #1b7a3d;
             --primary-dark: #145c2e;
+            --primary-light: #e8f5ec;
             --success: #198754;
             --danger: #dc3545;
             --warning: #ffc107;
-            --gray-100: #f8f9fa;
-            --gray-200: #e9ecef;
-            --gray-500: #adb5bd;
-            --gray-700: #495057;
-            --gray-900: #212529;
-            --shadow: 0 2px 8px rgba(0,0,0,0.1);
-            --radius: 12px;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --radius: 16px;
+            --radius-sm: 10px;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--gray-100);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background: var(--gray-50);
             color: var(--gray-900);
             min-height: 100vh;
             padding-bottom: 80px;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* HEADER */
         .header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
-            padding: 16px 20px;
+            padding: 14px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-md);
         }
         .header .logo { display: flex; align-items: center; gap: 10px; }
         .header .logo svg { width: 36px; height: 36px; }
-        .header .logo span { font-size: 18px; font-weight: 700; }
+        .header .logo span { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
         .header .user-info { font-size: 12px; text-align: right; opacity: 0.9; }
         .header .user-info strong { display: block; font-size: 14px; }
         .header .btn-logout {
-            background: rgba(255,255,255,0.2);
-            border: none;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
             color: white;
-            padding: 6px 12px;
-            border-radius: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
             cursor: pointer;
             font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
         }
+        .header .btn-logout:active { background: rgba(255,255,255,0.3); }
 
         /* TELAS */
-        .tela { display: none; padding: 16px; }
-        .tela.ativa { display: block; }
+        .tela { display: none; padding: 20px 16px; }
+        .tela.ativa { display: block; animation: fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         /* LOGIN */
         .login-container {
             max-width: 400px;
-            margin: 60px auto;
+            margin: 40px auto;
             background: white;
-            border-radius: var(--radius);
-            padding: 32px 24px;
-            box-shadow: var(--shadow);
+            border-radius: 24px;
+            padding: 40px 28px;
+            box-shadow: var(--shadow-lg);
             text-align: center;
         }
         .login-container svg { width: 80px; height: 80px; margin-bottom: 16px; }
-        .login-container h2 { margin-bottom: 24px; color: var(--primary); }
+        .login-container h2 { margin-bottom: 28px; color: var(--gray-900); font-size: 22px; font-weight: 700; }
 
         /* FORM */
         .form-group { margin-bottom: 16px; text-align: left; }
         .form-group label {
             display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--gray-700);
-            margin-bottom: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gray-500);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .form-group input, .form-group select, .form-group textarea {
             width: 100%;
-            padding: 12px;
+            padding: 14px 16px;
             border: 2px solid var(--gray-200);
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             font-size: 16px;
-            transition: border-color 0.2s;
+            background: var(--gray-50);
+            transition: all 0.2s;
+            color: var(--gray-900);
             -webkit-appearance: none;
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
             outline: none;
             border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(27,122,61,0.1);
         }
         .form-group textarea { resize: vertical; min-height: 60px; }
 
@@ -111,45 +132,50 @@
             gap: 8px;
             padding: 14px 24px;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
             width: 100%;
-            transition: all 0.2s;
+            transition: all 0.15s;
+            letter-spacing: -0.2px;
         }
+        .btn:active { transform: scale(0.98); }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); }
-        .btn-primary:disabled { background: var(--gray-500); cursor: not-allowed; }
+        .btn-primary:active { background: var(--primary-dark); }
+        .btn-primary:disabled { background: var(--gray-300); cursor: not-allowed; }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-outline {
             background: white;
-            color: var(--primary);
-            border: 2px solid var(--primary);
+            color: var(--gray-600);
+            border: 2px solid var(--gray-200);
         }
-        .btn-sm { padding: 8px 16px; font-size: 14px; width: auto; }
+        .btn-outline:active { background: var(--gray-50); }
+        .btn-sm { padding: 10px 16px; font-size: 14px; width: auto; }
 
         /* CARDS */
         .card {
             background: white;
             border-radius: var(--radius);
-            padding: 16px;
+            padding: 20px;
             margin-bottom: 12px;
             box-shadow: var(--shadow);
+            border: 1px solid var(--gray-100);
         }
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
-        .card-header h4 { font-size: 14px; color: var(--primary); }
-        .card-body { font-size: 13px; color: var(--gray-700); }
-        .card-body .row { display: flex; justify-content: space-between; padding: 4px 0; }
-        .card-body .label { font-weight: 600; }
+        .card-header h4 { font-size: 15px; color: var(--primary); font-weight: 700; }
+        .card-body { font-size: 13px; color: var(--gray-600); }
+        .card-body .row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--gray-50); }
+        .card-body .row:last-child { border-bottom: none; }
+        .card-body .label { font-weight: 600; color: var(--gray-700); }
 
-        /* SERIAL INPUT ESPECIAL */
+        /* SERIAL INPUT */
         .serial-input-wrapper {
             position: relative;
             display: flex;
@@ -157,34 +183,31 @@
         }
         .serial-input-wrapper input {
             flex: 1;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             letter-spacing: 2px;
             text-align: center;
             text-transform: uppercase;
+            padding: 14px 16px;
         }
-        .serial-input-wrapper .btn-scan {
+        .serial-input-wrapper .btn-icon {
             width: 52px;
             height: 52px;
             padding: 0;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             flex-shrink: 0;
-        }
-        .btn-camera {
-            width: 52px;
-            height: 52px;
-            padding: 0;
-            border-radius: 8px;
-            flex-shrink: 0;
-            background: var(--success);
             border: none;
             color: white;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.15s;
         }
-        .btn-camera.ativo { background: var(--danger); }
+        .serial-input-wrapper .btn-icon:active { transform: scale(0.93); }
+        .btn-search { background: var(--primary); }
+        .btn-scanner-cam { background: #2563eb; }
+        .btn-scanner-cam.ativo { background: var(--danger); }
         #scannerContainer {
             display: none;
             margin-top: 12px;
@@ -197,96 +220,265 @@
         #reader { width: 100%; }
         #reader video { border-radius: var(--radius); }
 
-        /* FOTOS DOCUMENTOS */
+        /* BOTÃO ANEXOS (no topo) */
+        .btn-anexos {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: white;
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius-sm);
+            color: var(--gray-500);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 12px;
+        }
+        .btn-anexos:active { background: var(--gray-50); border-color: var(--primary); color: var(--primary); }
+        .btn-anexos.tem-fotos { border-color: var(--primary); color: var(--primary); background: var(--primary-light); border-style: solid; }
+        .btn-anexos svg { flex-shrink: 0; }
+        .btn-anexos .anexo-badge {
+            background: var(--primary);
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: auto;
+        }
+
+        /* MODAL FOTOS */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-sheet {
+            background: white;
+            border-radius: 24px 24px 0 0;
+            width: 100%;
+            max-width: 480px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 20px;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-handle {
+            width: 36px;
+            height: 4px;
+            background: var(--gray-300);
+            border-radius: 4px;
+            margin: 0 auto 16px;
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* FOTOS GRID */
         .fotos-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 8px;
-            margin-top: 8px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 12px;
         }
         .foto-thumb {
             position: relative;
             aspect-ratio: 3/4;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             overflow: hidden;
-            border: 2px solid var(--gray-200);
+            border: 2px solid var(--gray-100);
+            box-shadow: var(--shadow-sm);
         }
         .foto-thumb img {
             width: 100%; height: 100%; object-fit: cover;
         }
         .foto-thumb .foto-remove {
-            position: absolute; top: 4px; right: 4px;
-            width: 24px; height: 24px; border-radius: 50%;
+            position: absolute; top: 6px; right: 6px;
+            width: 26px; height: 26px; border-radius: 50%;
             background: var(--danger); color: white;
-            border: none; font-size: 14px; cursor: pointer;
+            border: 2px solid white;
+            font-size: 14px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--shadow);
         }
         .btn-foto {
             aspect-ratio: 3/4;
-            border: 2px dashed var(--gray-500);
-            border-radius: 8px;
-            background: var(--gray-100);
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius-sm);
+            background: var(--gray-50);
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            color: var(--gray-500);
+            gap: 6px;
+            color: var(--gray-400);
             font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
         }
-        .btn-foto svg { opacity: 0.5; }
+        .btn-foto:active { border-color: var(--primary); color: var(--primary); }
         .foto-counter {
             font-size: 12px;
-            color: var(--gray-500);
-            margin-top: 4px;
+            color: var(--gray-400);
+            margin-top: 8px;
+            text-align: center;
+        }
+        .btn-add-foto {
+            aspect-ratio: 3/4;
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius-sm);
+            background: var(--gray-50);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-add-foto:active { border-color: var(--primary); background: var(--primary-light); }
+
+        /* MODAL HEADER */
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .modal-header h3 {
+            font-size: 17px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+        .modal-close {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: var(--gray-100);
+            color: var(--gray-700);
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .modal-close:active { background: var(--gray-200); }
+        .modal-body { padding-bottom: 20px; }
+
+        /* BOTÃO ANEXOS */
+        .btn-anexos {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius);
+            background: white;
+            color: var(--gray-600);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
+            position: relative;
+        }
+        .btn-anexos:active { border-color: var(--primary); background: var(--primary-light); }
+        .btn-anexos.has-files { border-color: var(--success); border-style: solid; color: var(--success); }
+        .anexo-badge {
+            background: var(--success);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            min-width: 22px;
+            height: 22px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+            margin-left: auto;
         }
 
         /* ITEM LISTA */
         .item-reserva {
             background: white;
             border-radius: var(--radius);
-            padding: 14px;
+            padding: 14px 16px;
             margin-bottom: 10px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-100);
             display: flex;
             align-items: center;
             gap: 12px;
+            transition: all 0.15s;
         }
+        .item-reserva:active { background: var(--gray-50); }
         .item-reserva .item-icon {
             width: 44px;
             height: 44px;
-            border-radius: 10px;
-            background: var(--gray-100);
+            border-radius: 12px;
+            background: var(--primary-light);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
         }
-        .item-reserva .item-info { flex: 1; }
-        .item-reserva .item-info .prod-name { font-weight: 700; font-size: 14px; }
-        .item-reserva .item-info .prod-detail { font-size: 12px; color: var(--gray-700); margin-top: 2px; }
+        .item-reserva .item-info { flex: 1; min-width: 0; }
+        .item-reserva .item-info .prod-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-reserva .item-info .prod-detail { font-size: 12px; color: var(--gray-500); margin-top: 3px; line-height: 1.4; }
         .item-reserva .item-remove {
             width: 32px;
             height: 32px;
             border-radius: 50%;
             border: none;
-            background: #fee2e2;
+            background: #fef2f2;
             color: var(--danger);
             font-size: 18px;
             cursor: pointer;
             flex-shrink: 0;
+            transition: all 0.15s;
         }
+        .item-reserva .item-remove:active { background: #fecaca; }
 
         /* BADGE */
         .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 20px;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: 0.2px;
         }
-        .badge-info { background: #dbeafe; color: #1e40af; }
+        .badge-info { background: #dbeafe; color: #1d4ed8; }
         .badge-success { background: #d1fae5; color: #065f46; }
         .badge-warning { background: #fef3c7; color: #92400e; }
 
@@ -295,31 +487,33 @@
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border-radius: var(--radius);
-            padding: 20px;
+            padding: 24px;
             margin-bottom: 16px;
+            box-shadow: var(--shadow-md);
         }
-        .resumo-box .total-label { font-size: 13px; opacity: 0.8; }
-        .resumo-box .total-valor { font-size: 28px; font-weight: 700; }
-        .resumo-box .total-itens { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+        .resumo-box .total-label { font-size: 12px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .resumo-box .total-valor { font-size: 32px; font-weight: 800; margin-top: 4px; letter-spacing: -1px; }
+        .resumo-box .total-itens { font-size: 13px; opacity: 0.7; margin-top: 4px; }
 
         /* LOADING */
         .loading-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
             z-index: 999;
             align-items: center;
             justify-content: center;
         }
         .loading-overlay.show { display: flex; }
         .spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid rgba(255,255,255,0.3);
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(255,255,255,0.2);
             border-top-color: white;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            animation: spin 0.7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -331,13 +525,15 @@
             transform: translateX(-50%) translateY(100px);
             background: var(--gray-900);
             color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 14px 24px;
+            border-radius: 14px;
             font-size: 14px;
+            font-weight: 600;
             z-index: 1000;
-            transition: transform 0.3s;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             max-width: 90%;
             text-align: center;
+            box-shadow: var(--shadow-lg);
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
         .toast.error { background: var(--danger); }
@@ -352,25 +548,38 @@
             background: white;
             display: flex;
             justify-content: space-around;
-            padding: 8px 0 max(8px, env(safe-area-inset-bottom));
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+            border-top: 1px solid var(--gray-100);
             z-index: 100;
         }
         .bottom-nav .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
-            padding: 4px 16px;
+            gap: 3px;
+            padding: 6px 20px;
             border: none;
             background: none;
-            color: var(--gray-500);
+            color: var(--gray-400);
             font-size: 11px;
+            font-weight: 600;
             cursor: pointer;
-            transition: color 0.2s;
+            transition: all 0.2s;
+            position: relative;
         }
         .bottom-nav .nav-item.active { color: var(--primary); }
-        .bottom-nav .nav-item svg { width: 24px; height: 24px; }
+        .bottom-nav .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 0 0 3px 3px;
+        }
+        .bottom-nav .nav-item svg { width: 22px; height: 22px; }
 
         /* RESULTADO BUSCA */
         .resultado-busca {
@@ -380,29 +589,50 @@
             padding: 16px;
             margin-top: 12px;
             box-shadow: var(--shadow);
+            border: 1px solid var(--gray-100);
             border-left: 4px solid var(--success);
         }
-        .resultado-busca.show { display: block; }
+        .resultado-busca.show { display: block; animation: fadeIn 0.25s ease; }
         .resultado-busca.error { border-left-color: var(--danger); }
 
         /* SECTION TITLE */
         .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 12px;
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            letter-spacing: -0.3px;
+        }
+        .section-title .icon-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
         /* EMPTY STATE */
         .empty-state {
             text-align: center;
-            padding: 40px 20px;
-            color: var(--gray-500);
+            padding: 48px 20px;
+            color: var(--gray-400);
         }
-        .empty-state svg { width: 64px; height: 64px; margin-bottom: 12px; opacity: 0.5; }
-        .empty-state p { font-size: 14px; }
+        .empty-state .empty-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: var(--gray-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+        .empty-state p { font-size: 14px; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -464,27 +694,36 @@
 <!-- ============ TELA SCANNER (principal) ============ -->
 <div class="tela" id="telaScanner">
     <div class="section-title">
-        <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 1-1 0v-3A1.5 1.5 0 0 1 1.5 0h3a.5.5 0 0 1 0 1h-3zM11.5 0a.5.5 0 0 1 0 1h3a.5.5 0 0 1 .5.5v3a.5.5 0 0 0 1 0v-3A1.5 1.5 0 0 0 14.5 0h-3zM0 11.5a.5.5 0 0 1 1 0v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 1 0 1h-3A1.5 1.5 0 0 1 0 14.5v-3zm15 0a.5.5 0 0 1 1 0v3a1.5 1.5 0 0 1-1.5 1.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 0 .5-.5v-3z"/><path d="M1 3.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5zM1 7.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5z"/></svg>
+        <div class="icon-circle">
+            <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 1-1 0v-3A1.5 1.5 0 0 1 1.5 0h3a.5.5 0 0 1 0 1h-3zM11.5 0a.5.5 0 0 1 0 1h3a.5.5 0 0 1 .5.5v3a.5.5 0 0 0 1 0v-3A1.5 1.5 0 0 0 14.5 0h-3zM0 11.5a.5.5 0 0 1 1 0v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 1 0 1h-3A1.5 1.5 0 0 1 0 14.5v-3zm15 0a.5.5 0 0 1 1 0v3a1.5 1.5 0 0 1-1.5 1.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 0 .5-.5v-3z"/><path d="M3 4.5a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-7zm3 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7z"/></svg>
+        </div>
         Escanear Serial
     </div>
 
     <div class="form-group">
-        <label>Número de Série</label>
+        <label>Numero de Serie</label>
         <div class="serial-input-wrapper">
             <input type="text" id="inputSerial" placeholder="Digite ou escaneie" maxlength="20"
                    inputmode="numeric" autocomplete="off"
                    onkeydown="if(event.key==='Enter')buscarSerial()">
-            <button class="btn btn-primary btn-scan" onclick="buscarSerial()" title="Buscar">
-                <svg width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.156a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+            <button class="btn-icon btn-search" onclick="buscarSerial()" title="Buscar">
+                <svg width="22" height="22" fill="white" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.156a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
             </button>
-            <button class="btn-camera" id="btnCamera" onclick="toggleScanner()" title="Escanear com câmera">
-                <svg width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"/></svg>
+            <button class="btn-icon btn-scanner-cam" id="btnCamera" onclick="toggleScanner()" title="Escanear com camera">
+                <svg width="22" height="22" fill="white" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 1-1 0v-3A1.5 1.5 0 0 1 1.5 0h3a.5.5 0 0 1 0 1h-3zM11.5 0a.5.5 0 0 1 0 1h3a.5.5 0 0 1 .5.5v3a.5.5 0 0 0 1 0v-3A1.5 1.5 0 0 0 14.5 0h-3zM0 11.5a.5.5 0 0 1 1 0v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 1 0 1h-3A1.5 1.5 0 0 1 0 14.5v-3zm15 0a.5.5 0 0 1 .5.5v3a1.5 1.5 0 0 1-1.5 1.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 1 .5-.5zM3 4.5a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-7zm3 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7z"/></svg>
             </button>
         </div>
         <div id="scannerContainer">
             <div id="reader"></div>
         </div>
     </div>
+
+    <!-- Botão de Anexos (câmera para documentos) -->
+    <button class="btn-anexos" id="btnAnexos" onclick="abrirModalFotos()">
+        <svg width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"/></svg>
+        <span>Anexar Documentos / Fotos</span>
+        <span class="anexo-badge" id="anexoBadge" style="display:none;">0</span>
+    </button>
 
     <!-- Resultado da busca -->
     <div class="resultado-busca" id="resultBusca">
@@ -504,8 +743,10 @@
     <!-- Dados do procedimento (aparece quando tem itens) -->
     <div id="dadosProcedimento" style="display:none;margin-top:16px;">
         <div class="section-title">
-            <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.502-.032.1-.429h2.322z"/><circle cx="8" cy="4.5" r="1"/></svg>
-            Dados do Procedimento
+            <div class="icon-circle">
+                <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.502-.032.1-.429h2.322z"/><circle cx="8" cy="4.5" r="1"/></svg>
+            </div>
+            Procedimento
         </div>
         <div class="card">
             <div class="form-group">
@@ -513,32 +754,20 @@
                 <input type="date" id="inputDtUso">
             </div>
             <div class="form-group">
-                <label>Médico</label>
-                <input type="text" id="inputMedico" placeholder="Nome do médico">
+                <label>Medico</label>
+                <input type="text" id="inputMedico" placeholder="Nome do medico">
             </div>
             <div class="form-group">
                 <label>Paciente *</label>
                 <input type="text" id="inputPaciente" placeholder="Nome do paciente">
             </div>
             <div class="form-group">
-                <label>Convênio</label>
-                <input type="text" id="inputConvenio" placeholder="Nome do convênio">
+                <label>Convenio</label>
+                <input type="text" id="inputConvenio" placeholder="Nome do convenio">
             </div>
             <div class="form-group">
-                <label>Observação</label>
+                <label>Observacao</label>
                 <textarea id="inputObs" placeholder="Obs. para nota"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Documentos / Assinaturas</label>
-                <div class="fotos-grid" id="fotosGrid">
-                    <label class="btn-foto" id="btnAddFoto">
-                        <svg width="28" height="28" fill="currentColor" viewBox="0 0 16 16"><path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"/></svg>
-                        Tirar Foto
-                        <input type="file" accept="image/*" capture="environment" multiple
-                               style="display:none" onchange="adicionarFotos(this.files)">
-                    </label>
-                </div>
-                <div class="foto-counter" id="fotoCounter"></div>
             </div>
         </div>
 
@@ -559,8 +788,10 @@
 <!-- ============ TELA CONSIGNADOS ============ -->
 <div class="tela" id="telaConsignados">
     <div class="section-title">
-        <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v3h3a1 1 0 0 0 1-1v-2zm-5 3v-3H6v3h4zm-5 0v-3H1v2a1 1 0 0 0 1 1h3zm-4-4h4V8H1v3zm0-4h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/></svg>
-        Itens em Consignação
+        <div class="icon-circle">
+            <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v3h3a1 1 0 0 0 1-1v-2zm-5 3v-3H6v3h4zm-5 0v-3H1v2a1 1 0 0 0 1 1h3zm-4-4h4V8H1v3zm0-4h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/></svg>
+        </div>
+        Consignados
     </div>
     <div class="form-group">
         <label>Filtrar por Cliente</label>
@@ -577,13 +808,17 @@
 <!-- ============ TELA HISTÓRICO ============ -->
 <div class="tela" id="telaHistorico">
     <div class="section-title">
-        <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .979.654l-.615.789a6.996 6.996 0 0 0-.418-.302zm1.834 1.79a6.99 6.99 0 0 0-.653-.796l.724-.69c.27.285.52.59.747.91l-.818.576z"/><path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0v1z"/><path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z"/></svg>
-        Reservas Recentes
+        <div class="icon-circle">
+            <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .979.654l-.615.789a6.996 6.996 0 0 0-.418-.302zm1.834 1.79a6.99 6.99 0 0 0-.653-.796l.724-.69c.27.285.52.59.747.91l-.818.576z"/><path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0v1z"/><path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z"/></svg>
+        </div>
+        Historico
     </div>
     <div id="listaHistorico">
         <div class="empty-state">
-            <svg width="64" height="64" fill="var(--gray-500)" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/><path d="M3 3.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 6a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 6zm0 2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg>
-            <p>As reservas criadas nesta sessão aparecerão aqui</p>
+            <div class="empty-icon">
+                <svg width="32" height="32" fill="var(--gray-300)" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/><path d="M3 3.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 6a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 6zm0 2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg>
+            </div>
+            <p>As reservas criadas nesta sessao aparecerao aqui</p>
         </div>
     </div>
 </div>
@@ -602,6 +837,30 @@
         <svg fill="currentColor" viewBox="0 0 16 16"><path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .979.654l-.615.789a6.996 6.996 0 0 0-.418-.302zm1.834 1.79a6.99 6.99 0 0 0-.653-.796l.724-.69c.27.285.52.59.747.91l-.818.576z"/><path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0v1z"/><path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z"/></svg>
         Histórico
     </button>
+</div>
+
+<!-- ============ MODAL FOTOS (bottom-sheet) ============ -->
+<div class="modal-overlay" id="modalFotos" onclick="if(event.target===this)fecharModalFotos()">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+            <h3>
+                <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"/></svg>
+                Documentos / Fotos
+            </h3>
+            <button class="modal-close" onclick="fecharModalFotos()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="fotos-grid" id="fotosGrid">
+                <label class="btn-add-foto" id="btnAddFoto">
+                    <svg width="28" height="28" fill="var(--primary)" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/></svg>
+                    <span>Adicionar</span>
+                    <input type="file" accept="image/*" capture="environment" multiple onchange="adicionarFotos(this.files)" style="display:none;">
+                </label>
+            </div>
+            <div id="fotoCounter" style="text-align:center;font-size:13px;color:var(--gray-500);margin-top:8px;"></div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -826,6 +1085,14 @@ function pararScanner() {
 // ============================================================
 // FOTOS DOCUMENTOS
 // ============================================================
+function abrirModalFotos() {
+    document.getElementById('modalFotos').classList.add('show');
+}
+
+function fecharModalFotos() {
+    document.getElementById('modalFotos').classList.remove('show');
+}
+
 function adicionarFotos(files) {
     Array.from(files).forEach(file => {
         if (fotosDocumentos.length >= 10) {
@@ -859,7 +1126,8 @@ function adicionarFotos(files) {
         reader.readAsDataURL(file);
     });
     // Limpar input pra permitir selecionar mesma foto
-    document.querySelector('#btnAddFoto input').value = '';
+    const fileInput = document.querySelector('#btnAddFoto input');
+    if (fileInput) fileInput.value = '';
 }
 
 function removerFoto(idx) {
@@ -870,7 +1138,9 @@ function removerFoto(idx) {
 function renderizarFotos() {
     const grid = document.getElementById('fotosGrid');
     const counter = document.getElementById('fotoCounter');
-    // Limpar thumbs existentes (manter btn)
+    const badge = document.getElementById('anexoBadge');
+    const btnAnexos = document.getElementById('btnAnexos');
+    // Limpar thumbs existentes (manter btnAddFoto)
     grid.querySelectorAll('.foto-thumb').forEach(el => el.remove());
     // Inserir thumbs antes do botão
     const btnAdd = document.getElementById('btnAddFoto');
@@ -883,6 +1153,15 @@ function renderizarFotos() {
     counter.textContent = fotosDocumentos.length > 0 ? fotosDocumentos.length + ' foto(s) anexada(s)' : '';
     // Esconder botão se atingiu limite
     btnAdd.style.display = fotosDocumentos.length >= 10 ? 'none' : '';
+    // Atualizar badge no botão de anexos
+    if (fotosDocumentos.length > 0) {
+        badge.textContent = fotosDocumentos.length;
+        badge.style.display = '';
+        btnAnexos.classList.add('has-files');
+    } else {
+        badge.style.display = 'none';
+        btnAnexos.classList.remove('has-files');
+    }
 }
 
 // ============================================================
@@ -988,8 +1267,10 @@ function renderizarItens() {
     if (itensReserva.length === 0) {
         div.innerHTML = `
             <div class="empty-state">
-                <svg fill="var(--gray-500)" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 1-1 0v-3A1.5 1.5 0 0 1 1.5 0h3a.5.5 0 0 1 0 1h-3zM11 .5a.5.5 0 0 1 .5-.5h3A1.5 1.5 0 0 1 16 1.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 1-.5-.5z"/><path d="M8 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM6 7a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"/></svg>
-                <p>Escaneie um serial para começar</p>
+                <div class="empty-icon">
+                    <svg width="32" height="32" fill="var(--gray-300)" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 1-1 0v-3A1.5 1.5 0 0 1 1.5 0h3a.5.5 0 0 1 0 1h-3zM11 .5a.5.5 0 0 1 .5-.5h3A1.5 1.5 0 0 1 16 1.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 1-.5-.5z"/><path d="M8 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM6 7a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"/></svg>
+                </div>
+                <p>Escaneie um serial para comecar</p>
             </div>
         `;
         dados.style.display = 'none';
@@ -998,7 +1279,9 @@ function renderizarItens() {
 
     dados.style.display = 'block';
     let html = `<div class="section-title" style="margin-bottom:8px;">
-        <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+        <div class="icon-circle">
+            <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+        </div>
         Itens (${itensReserva.length}) - ${itensReserva[0].nomeCli}
     </div>`;
 
@@ -1183,8 +1466,9 @@ function renderizarHistorico() {
 
     if (historicoReservas.length === 0) {
         div.innerHTML = `<div class="empty-state">
-            <svg width="64" height="64" fill="var(--gray-500)" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/></svg>
-            <p>As reservas criadas nesta sessão aparecerão aqui</p>
+            <div class="empty-icon">
+                <svg width="32" height="32" fill="var(--gray-300)" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/></svg>
+            <p>As reservas criadas nesta sessao aparecerao aqui</p>
         </div>`;
         return;
     }
