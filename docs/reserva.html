@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0d6efd">
+    <title>CicloMed - Reserva</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%230d6efd'/%3E%3Ctext x='50' y='62' font-size='40' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3ECM%3C/text%3E%3C/svg%3E">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #0d6efd;
+            --primary-dark: #0a58ca;
+            --success: #198754;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-500: #adb5bd;
+            --gray-700: #495057;
+            --gray-900: #212529;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --radius: 12px;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-100);
+            color: var(--gray-900);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+        .header .logo { display: flex; align-items: center; gap: 10px; }
+        .header .logo svg { width: 36px; height: 36px; }
+        .header .logo span { font-size: 18px; font-weight: 700; }
+        .header .user-info { font-size: 12px; text-align: right; opacity: 0.9; }
+        .header .user-info strong { display: block; font-size: 14px; }
+        .header .btn-logout {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* TELAS */
+        .tela { display: none; padding: 16px; }
+        .tela.ativa { display: block; }
+
+        /* LOGIN */
+        .login-container {
+            max-width: 400px;
+            margin: 60px auto;
+            background: white;
+            border-radius: var(--radius);
+            padding: 32px 24px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        .login-container svg { width: 80px; height: 80px; margin-bottom: 16px; }
+        .login-container h2 { margin-bottom: 24px; color: var(--primary); }
+
+        /* FORM */
+        .form-group { margin-bottom: 16px; text-align: left; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 4px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+
+        /* BOTÕES */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-primary:disabled { background: var(--gray-500); cursor: not-allowed; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        .btn-sm { padding: 8px 16px; font-size: 14px; width: auto; }
+
+        /* CARDS */
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .card-header h4 { font-size: 14px; color: var(--primary); }
+        .card-body { font-size: 13px; color: var(--gray-700); }
+        .card-body .row { display: flex; justify-content: space-between; padding: 4px 0; }
+        .card-body .label { font-weight: 600; }
+
+        /* SERIAL INPUT ESPECIAL */
+        .serial-input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 8px;
+        }
+        .serial-input-wrapper input {
+            flex: 1;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .serial-input-wrapper .btn-scan {
+            width: 52px;
+            height: 52px;
+            padding: 0;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        /* ITEM LISTA */
+        .item-reserva {
+            background: white;
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .item-reserva .item-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: var(--gray-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .item-reserva .item-info { flex: 1; }
+        .item-reserva .item-info .prod-name { font-weight: 700; font-size: 14px; }
+        .item-reserva .item-info .prod-detail { font-size: 12px; color: var(--gray-700); margin-top: 2px; }
+        .item-reserva .item-remove {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: #fee2e2;
+            color: var(--danger);
+            font-size: 18px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* BADGE */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+
+        /* RESUMO */
+        .resumo-box {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .resumo-box .total-label { font-size: 13px; opacity: 0.8; }
+        .resumo-box .total-valor { font-size: 28px; font-weight: 700; }
+        .resumo-box .total-itens { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+
+        /* LOADING */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+        .loading-overlay.show { display: flex; }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--gray-900);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            transition: transform 0.3s;
+            max-width: 90%;
+            text-align: center;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.error { background: var(--danger); }
+        .toast.success { background: var(--success); }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        .bottom-nav .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 16px;
+            border: none;
+            background: none;
+            color: var(--gray-500);
+            font-size: 11px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .bottom-nav .nav-item.active { color: var(--primary); }
+        .bottom-nav .nav-item svg { width: 24px; height: 24px; }
+
+        /* RESULTADO BUSCA */
+        .resultado-busca {
+            display: none;
+            background: white;
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-top: 12px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--success);
+        }
+        .resultado-busca.show { display: block; }
+        .resultado-busca.error { border-left-color: var(--danger); }
+
+        /* SECTION TITLE */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray-500);
+        }
+        .empty-state svg { width: 64px; height: 64px; margin-bottom: 12px; opacity: 0.5; }
+        .empty-state p { font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ============ TELA LOGIN ============ -->
+<div class="tela ativa" id="telaLogin">
+    <div class="login-container">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="90" fill="#0d6efd"/>
+            <text x="100" y="80" font-size="32" text-anchor="middle" fill="white" font-family="Arial" font-weight="bold">CICLO</text>
+            <text x="100" y="115" font-size="28" text-anchor="middle" fill="white" font-family="Arial" font-weight="bold">MED</text>
+            <text x="100" y="145" font-size="16" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="Arial">Reservas</text>
+        </svg>
+        <h2>Login do Vendedor</h2>
+        <div class="form-group">
+            <label>Código do Vendedor</label>
+            <input type="text" id="loginVendedor" placeholder="000109" maxlength="6" inputmode="numeric">
+        </div>
+        <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="loginSenha" placeholder="Sua senha">
+        </div>
+        <button class="btn btn-primary" onclick="fazerLogin()">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+            Entrar
+        </button>
+    </div>
+</div>
+
+<!-- ============ HEADER (aparece após login) ============ -->
+<div class="header" id="appHeader" style="display:none;">
+    <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="rgba(255,255,255,0.2)"/>
+            <text x="50" y="62" font-size="32" text-anchor="middle" fill="white" font-family="Arial" font-weight="bold">CM</text>
+        </svg>
+        <span>Reservas</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+        <div class="user-info">
+            <strong id="headerNome"></strong>
+            <span id="headerCod"></span>
+        </div>
+        <button class="btn-logout" onclick="fazerLogout()">Sair</button>
+    </div>
+</div>
+
+<!-- ============ TELA SCANNER (principal) ============ -->
+<div class="tela" id="telaScanner">
+    <div class="section-title">
+        <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 1-1 0v-3A1.5 1.5 0 0 1 1.5 0h3a.5.5 0 0 1 0 1h-3zM11.5 0a.5.5 0 0 1 0 1h3a.5.5 0 0 1 .5.5v3a.5.5 0 0 0 1 0v-3A1.5 1.5 0 0 0 14.5 0h-3zM0 11.5a.5.5 0 0 1 1 0v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 1 0 1h-3A1.5 1.5 0 0 1 0 14.5v-3zm15 0a.5.5 0 0 1 1 0v3a1.5 1.5 0 0 1-1.5 1.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 0 .5-.5v-3z"/><path d="M1 3.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5zM1 7.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5z"/></svg>
+        Escanear Serial
+    </div>
+
+    <div class="form-group">
+        <label>Número de Série</label>
+        <div class="serial-input-wrapper">
+            <input type="text" id="inputSerial" placeholder="Digite ou escaneie" maxlength="20"
+                   inputmode="numeric" autocomplete="off"
+                   onkeydown="if(event.key==='Enter')buscarSerial()">
+            <button class="btn btn-primary btn-scan" onclick="buscarSerial()" title="Buscar">
+                <svg width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.156a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Resultado da busca -->
+    <div class="resultado-busca" id="resultBusca">
+        <div id="resultContent"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn btn-success btn-sm" onclick="adicionarItem()" style="flex:1;">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                Adicionar
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="limparBusca()" style="flex:1;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Itens adicionados -->
+    <div id="listaItens" style="margin-top:16px;"></div>
+
+    <!-- Dados do procedimento (aparece quando tem itens) -->
+    <div id="dadosProcedimento" style="display:none;margin-top:16px;">
+        <div class="section-title">
+            <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.502-.032.1-.429h2.322z"/><circle cx="8" cy="4.5" r="1"/></svg>
+            Dados do Procedimento
+        </div>
+        <div class="card">
+            <div class="form-group">
+                <label>Data de Uso *</label>
+                <input type="date" id="inputDtUso">
+            </div>
+            <div class="form-group">
+                <label>Médico</label>
+                <input type="text" id="inputMedico" placeholder="Nome do médico">
+            </div>
+            <div class="form-group">
+                <label>Paciente *</label>
+                <input type="text" id="inputPaciente" placeholder="Nome do paciente">
+            </div>
+            <div class="form-group">
+                <label>Convênio</label>
+                <input type="text" id="inputConvenio" placeholder="Nome do convênio">
+            </div>
+            <div class="form-group">
+                <label>Observação</label>
+                <textarea id="inputObs" placeholder="Obs. para nota"></textarea>
+            </div>
+        </div>
+
+        <!-- Resumo e botão -->
+        <div class="resumo-box" id="resumoBox">
+            <div class="total-label">Valor Total</div>
+            <div class="total-valor" id="totalValor">R$ 0,00</div>
+            <div class="total-itens" id="totalItens">0 itens</div>
+        </div>
+
+        <button class="btn btn-success" id="btnConfirmar" onclick="confirmarReserva()">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/></svg>
+            Confirmar Reserva
+        </button>
+    </div>
+</div>
+
+<!-- ============ TELA CONSIGNADOS ============ -->
+<div class="tela" id="telaConsignados">
+    <div class="section-title">
+        <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v3h3a1 1 0 0 0 1-1v-2zm-5 3v-3H6v3h4zm-5 0v-3H1v2a1 1 0 0 0 1 1h3zm-4-4h4V8H1v3zm0-4h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/></svg>
+        Itens em Consignação
+    </div>
+    <div class="form-group">
+        <label>Filtrar por Cliente</label>
+        <input type="text" id="filtroCliente" placeholder="Código do cliente (vazio = todos)" maxlength="6"
+               onkeydown="if(event.key==='Enter')carregarConsignados()">
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="carregarConsignados()" style="margin-bottom:16px;">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.156a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+        Consultar
+    </button>
+    <div id="listaConsignados"></div>
+</div>
+
+<!-- ============ TELA HISTÓRICO ============ -->
+<div class="tela" id="telaHistorico">
+    <div class="section-title">
+        <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .979.654l-.615.789a6.996 6.996 0 0 0-.418-.302zm1.834 1.79a6.99 6.99 0 0 0-.653-.796l.724-.69c.27.285.52.59.747.91l-.818.576z"/><path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0v1z"/><path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z"/></svg>
+        Reservas Recentes
+    </div>
+    <div id="listaHistorico">
+        <div class="empty-state">
+            <svg width="64" height="64" fill="var(--gray-500)" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/><path d="M3 3.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 6a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 6zm0 2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg>
+            <p>As reservas criadas nesta sessão aparecerão aqui</p>
+        </div>
+    </div>
+</div>
+
+<!-- ============ BOTTOM NAV ============ -->
+<div class="bottom-nav" id="bottomNav" style="display:none;">
+    <button class="nav-item active" data-tela="telaScanner" onclick="navegarPara('telaScanner')">
+        <svg fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 1-1 0v-3A1.5 1.5 0 0 1 1.5 0h3a.5.5 0 0 1 0 1h-3zM11 .5a.5.5 0 0 1 .5-.5h3A1.5 1.5 0 0 1 16 1.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 1-.5-.5zM.5 11a.5.5 0 0 1 .5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 1 0 1h-3A1.5 1.5 0 0 1 0 14.5v-3a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v3a1.5 1.5 0 0 1-1.5 1.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 1 .5-.5zM3 4.5a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-7zm3 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7z"/></svg>
+        Scanner
+    </button>
+    <button class="nav-item" data-tela="telaConsignados" onclick="navegarPara('telaConsignados')">
+        <svg fill="currentColor" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v3h3a1 1 0 0 0 1-1v-2zm-5 3v-3H6v3h4zm-5 0v-3H1v2a1 1 0 0 0 1 1h3zm-4-4h4V8H1v3zm0-4h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/></svg>
+        Consignados
+    </button>
+    <button class="nav-item" data-tela="telaHistorico" onclick="navegarPara('telaHistorico')">
+        <svg fill="currentColor" viewBox="0 0 16 16"><path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .979.654l-.615.789a6.996 6.996 0 0 0-.418-.302zm1.834 1.79a6.99 6.99 0 0 0-.653-.796l.724-.69c.27.285.52.59.747.91l-.818.576z"/><path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0v1z"/><path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z"/></svg>
+        Histórico
+    </button>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURAÇÃO
+// ============================================================
+const API_BASE = 'https://ciclomed161112.protheus.cloudtotvs.com.br:1557/rest03/WSRESERVA';
+const AUTH = 'Basic ' + btoa('admin:c1c2c3c4');
+
+// Estado da aplicação
+let usuario = null;
+let itensReserva = [];
+let serialAtual = null;
+let historicoReservas = [];
+
+// ============================================================
+// API HELPER
+// ============================================================
+async function apiGet(params) {
+    const url = API_BASE + '?' + new URLSearchParams(params).toString();
+    const resp = await fetch(url, {
+        method: 'GET',
+        headers: { 'Authorization': AUTH }
+    });
+    return await resp.json();
+}
+
+async function apiPost(body) {
+    const resp = await fetch(API_BASE, {
+        method: 'POST',
+        headers: {
+            'Authorization': AUTH,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    });
+    return await resp.json();
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function showLoading() { document.getElementById('loading').classList.add('show'); }
+function hideLoading() { document.getElementById('loading').classList.remove('show'); }
+
+function showToast(msg, tipo = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + tipo + ' show';
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function navegarPara(telaId) {
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById(telaId).classList.add('ativa');
+    document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.toggle('active', n.dataset.tela === telaId);
+    });
+}
+
+function formatMoney(v) {
+    return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+}
+
+function formatDate(d) {
+    if (!d || d.length < 8) return '-';
+    return d.substring(6,8) + '/' + d.substring(4,6) + '/' + d.substring(0,4);
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+async function fazerLogin() {
+    const cod = document.getElementById('loginVendedor').value.trim().padStart(6, '0');
+    const senha = document.getElementById('loginSenha').value.trim();
+
+    if (!cod || !senha) {
+        showToast('Preencha código e senha', 'error');
+        return;
+    }
+
+    showLoading();
+    try {
+        const data = await apiGet({ acao: 'login', vendedor: cod, senha: senha });
+        hideLoading();
+
+        if (data.ok) {
+            usuario = { ...data, senha: senha };
+            // Salvar no localStorage
+            localStorage.setItem('cm_user', JSON.stringify(usuario));
+
+            document.getElementById('headerNome').textContent = data.nreduz || data.nome;
+            document.getElementById('headerCod').textContent = cod;
+
+            document.getElementById('telaLogin').classList.remove('ativa');
+            document.getElementById('appHeader').style.display = 'flex';
+            document.getElementById('bottomNav').style.display = 'flex';
+            document.getElementById('telaScanner').classList.add('ativa');
+
+            showToast('Bem-vindo, ' + (data.nreduz || data.nome) + '!', 'success');
+            document.getElementById('inputSerial').focus();
+
+            // Setar data de uso com hoje
+            document.getElementById('inputDtUso').valueAsDate = new Date();
+        } else {
+            showToast(data.msg || 'Erro no login', 'error');
+        }
+    } catch (e) {
+        hideLoading();
+        showToast('Erro de conexão: ' + e.message, 'error');
+    }
+}
+
+function fazerLogout() {
+    usuario = null;
+    itensReserva = [];
+    serialAtual = null;
+    localStorage.removeItem('cm_user');
+
+    document.getElementById('appHeader').style.display = 'none';
+    document.getElementById('bottomNav').style.display = 'none';
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById('telaLogin').classList.add('ativa');
+
+    // Limpar campos
+    document.getElementById('loginVendedor').value = '';
+    document.getElementById('loginSenha').value = '';
+    document.getElementById('inputSerial').value = '';
+    limparBusca();
+    renderizarItens();
+}
+
+// Auto-login se tiver sessão salva
+function autoLogin() {
+    const saved = localStorage.getItem('cm_user');
+    if (saved) {
+        try {
+            usuario = JSON.parse(saved);
+            document.getElementById('headerNome').textContent = usuario.nreduz || usuario.nome;
+            document.getElementById('headerCod').textContent = usuario.vendedor;
+
+            document.getElementById('telaLogin').classList.remove('ativa');
+            document.getElementById('appHeader').style.display = 'flex';
+            document.getElementById('bottomNav').style.display = 'flex';
+            document.getElementById('telaScanner').classList.add('ativa');
+
+            document.getElementById('inputDtUso').valueAsDate = new Date();
+        } catch(e) {
+            localStorage.removeItem('cm_user');
+        }
+    }
+}
+
+// ============================================================
+// BUSCAR SERIAL
+// ============================================================
+async function buscarSerial() {
+    const serial = document.getElementById('inputSerial').value.trim();
+    if (!serial) {
+        showToast('Digite o número de série', 'error');
+        return;
+    }
+
+    // Verificar se já foi adicionado
+    if (itensReserva.find(i => i.serial.trim() === serial)) {
+        showToast('Serial já adicionado!', 'error');
+        return;
+    }
+
+    showLoading();
+    try {
+        const data = await apiGet({ serial: serial, vendedor: usuario.vendedor });
+        hideLoading();
+
+        const div = document.getElementById('resultBusca');
+        const content = document.getElementById('resultContent');
+
+        if (data.ok) {
+            serialAtual = data;
+
+            // Verificar se é do mesmo cliente (se já tem itens)
+            if (itensReserva.length > 0 && itensReserva[0].cliente !== data.cliente) {
+                div.classList.add('show', 'error');
+                div.classList.remove('error');
+                content.innerHTML = `
+                    <div style="color:var(--danger);font-weight:700;margin-bottom:8px;">⚠️ Cliente diferente!</div>
+                    <p style="font-size:13px;">Este serial pertence ao cliente <strong>${data.nomeCli}</strong> (${data.cliente}),
+                    mas os itens já adicionados são do cliente <strong>${itensReserva[0].nomeCli}</strong> (${itensReserva[0].cliente}).</p>
+                    <p style="font-size:13px;margin-top:8px;">Finalize a reserva atual antes de adicionar itens de outro cliente.</p>
+                `;
+                // Esconder botão adicionar
+                div.querySelector('.btn-success').style.display = 'none';
+                return;
+            }
+
+            div.classList.add('show');
+            div.classList.remove('error');
+            div.querySelector('.btn-success').style.display = '';
+            content.innerHTML = `
+                <div style="font-weight:700;font-size:15px;color:var(--success);margin-bottom:8px;">✓ Serial encontrado</div>
+                <div class="card-body">
+                    <div class="row"><span class="label">Produto:</span><span>${data.produto}</span></div>
+                    <div class="row"><span class="label">Descrição:</span><span style="font-size:12px;">${data.descProduto}</span></div>
+                    <div class="row"><span class="label">Serial:</span><span style="font-weight:700;">${data.serial.trim()}</span></div>
+                    <div class="row"><span class="label">Lote:</span><span>${data.lote}</span></div>
+                    <div class="row"><span class="label">Validade:</span><span>${formatDate(data.validade)}</span></div>
+                    <div class="row"><span class="label">Cliente:</span><span>${data.nomeCli} (${data.cliente})</span></div>
+                    <div class="row"><span class="label">NF Remessa:</span><span>${data.nfRemessa}</span></div>
+                    <div class="row"><span class="label">Preço:</span><span style="font-weight:700;color:var(--success);">${formatMoney(data.preco)}</span></div>
+                </div>
+            `;
+        } else {
+            serialAtual = null;
+            div.classList.add('show', 'error');
+            content.innerHTML = `
+                <div style="color:var(--danger);font-weight:700;">✗ ${data.msg || 'Serial não encontrado'}</div>
+            `;
+            div.querySelector('.btn-success').style.display = 'none';
+        }
+    } catch (e) {
+        hideLoading();
+        showToast('Erro de conexão: ' + e.message, 'error');
+    }
+}
+
+function limparBusca() {
+    document.getElementById('resultBusca').classList.remove('show', 'error');
+    document.getElementById('inputSerial').value = '';
+    serialAtual = null;
+    document.getElementById('inputSerial').focus();
+}
+
+// ============================================================
+// GERENCIAR ITENS
+// ============================================================
+function adicionarItem() {
+    if (!serialAtual) return;
+
+    itensReserva.push({ ...serialAtual });
+    limparBusca();
+    renderizarItens();
+    showToast('Item adicionado!', 'success');
+}
+
+function removerItem(idx) {
+    itensReserva.splice(idx, 1);
+    renderizarItens();
+}
+
+function renderizarItens() {
+    const div = document.getElementById('listaItens');
+    const dados = document.getElementById('dadosProcedimento');
+
+    if (itensReserva.length === 0) {
+        div.innerHTML = `
+            <div class="empty-state">
+                <svg fill="var(--gray-500)" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 1-1 0v-3A1.5 1.5 0 0 1 1.5 0h3a.5.5 0 0 1 0 1h-3zM11 .5a.5.5 0 0 1 .5-.5h3A1.5 1.5 0 0 1 16 1.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 1-.5-.5z"/><path d="M8 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM6 7a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"/></svg>
+                <p>Escaneie um serial para começar</p>
+            </div>
+        `;
+        dados.style.display = 'none';
+        return;
+    }
+
+    dados.style.display = 'block';
+    let html = `<div class="section-title" style="margin-bottom:8px;">
+        <svg width="20" height="20" fill="var(--primary)" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+        Itens (${itensReserva.length}) - ${itensReserva[0].nomeCli}
+    </div>`;
+
+    itensReserva.forEach((item, idx) => {
+        html += `
+        <div class="item-reserva">
+            <div class="item-icon">
+                <svg width="24" height="24" fill="var(--primary)" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 1-1 0v-3A1.5 1.5 0 0 1 1.5 0h3a.5.5 0 0 1 0 1h-3z"/><path d="M3 4.5a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-7zm3 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7z"/></svg>
+            </div>
+            <div class="item-info">
+                <div class="prod-name">${item.descProduto}</div>
+                <div class="prod-detail">Serial: <strong>${item.serial.trim()}</strong> | Lote: ${item.lote} | ${formatMoney(item.preco)}</div>
+            </div>
+            <button class="item-remove" onclick="removerItem(${idx})" title="Remover">×</button>
+        </div>`;
+    });
+
+    div.innerHTML = html;
+
+    // Atualizar resumo
+    const total = itensReserva.reduce((s, i) => s + Number(i.preco), 0);
+    document.getElementById('totalValor').textContent = formatMoney(total);
+    document.getElementById('totalItens').textContent = itensReserva.length + ' ite' + (itensReserva.length === 1 ? 'm' : 'ns');
+}
+
+// ============================================================
+// CONFIRMAR RESERVA
+// ============================================================
+async function confirmarReserva() {
+    if (itensReserva.length === 0) {
+        showToast('Adicione pelo menos um item', 'error');
+        return;
+    }
+
+    const dtUso = document.getElementById('inputDtUso').value;
+    const paciente = document.getElementById('inputPaciente').value.trim();
+
+    if (!dtUso) {
+        showToast('Informe a data de uso', 'error');
+        return;
+    }
+    if (!paciente) {
+        showToast('Informe o nome do paciente', 'error');
+        return;
+    }
+
+    // Formatar data dd/mm/yyyy
+    const [y, m, d] = dtUso.split('-');
+    const dtFormatada = d + '/' + m + '/' + y;
+
+    const body = {
+        vendedor: usuario.vendedor,
+        senha: usuario.senha,
+        cliente: itensReserva[0].cliente,
+        loja: itensReserva[0].loja,
+        fil: itensReserva[0].filial,
+        medico: '',
+        nomeMedico: document.getElementById('inputMedico').value.trim(),
+        paciente: paciente,
+        convenio: document.getElementById('inputConvenio').value.trim(),
+        codConvenio: '',
+        dtUso: dtFormatada,
+        mennota: document.getElementById('inputObs').value.trim(),
+        itens: itensReserva.map(item => ({
+            serial: item.serial.trim(),
+            produto: item.produto,
+            lote: item.lote,
+            validade: item.validade,
+            preco: Number(item.preco)
+        }))
+    };
+
+    // Confirmação
+    if (!confirm(`Confirma reserva com ${itensReserva.length} item(ns) para ${itensReserva[0].nomeCli}?\n\nPaciente: ${paciente}\nData: ${dtFormatada}\nValor: ${formatMoney(itensReserva.reduce((s,i) => s + Number(i.preco), 0))}`)) {
+        return;
+    }
+
+    showLoading();
+    try {
+        const data = await apiPost(body);
+        hideLoading();
+
+        if (data.ok) {
+            // Salvar no histórico
+            historicoReservas.unshift({
+                pedido: data.pedido,
+                cliente: itensReserva[0].nomeCli,
+                codCli: itensReserva[0].cliente,
+                paciente: paciente,
+                dtUso: dtFormatada,
+                qtdItens: itensReserva.length,
+                valor: itensReserva.reduce((s,i) => s + Number(i.preco), 0),
+                hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
+            });
+            renderizarHistorico();
+
+            showToast('Reserva ' + data.pedido + ' gerada com sucesso!', 'success');
+
+            // Limpar
+            itensReserva = [];
+            serialAtual = null;
+            document.getElementById('inputSerial').value = '';
+            document.getElementById('inputPaciente').value = '';
+            document.getElementById('inputMedico').value = '';
+            document.getElementById('inputConvenio').value = '';
+            document.getElementById('inputObs').value = '';
+            document.getElementById('inputDtUso').valueAsDate = new Date();
+            renderizarItens();
+            limparBusca();
+
+            document.getElementById('inputSerial').focus();
+        } else {
+            showToast(data.msg || 'Erro ao criar reserva', 'error');
+        }
+    } catch (e) {
+        hideLoading();
+        showToast('Erro de conexão: ' + e.message, 'error');
+    }
+}
+
+// ============================================================
+// LISTAR CONSIGNADOS
+// ============================================================
+async function carregarConsignados() {
+    const cli = document.getElementById('filtroCliente').value.trim();
+    showLoading();
+
+    try {
+        const params = { acao: 'listar', vendedor: usuario.vendedor };
+        if (cli) params.cliente = cli.padStart(6, '0');
+
+        const data = await apiGet(params);
+        hideLoading();
+
+        const div = document.getElementById('listaConsignados');
+
+        if (!data.ok || !data.itens || data.itens.length === 0) {
+            div.innerHTML = `<div class="empty-state"><p>Nenhum item consignado encontrado</p></div>`;
+            return;
+        }
+
+        let html = `<div style="font-size:13px;color:var(--gray-700);margin-bottom:8px;">${data.itens.length} item(ns) encontrado(s)</div>`;
+
+        data.itens.forEach(item => {
+            html += `
+            <div class="item-reserva" style="cursor:pointer;" onclick="usarConsignado('${item.serial.trim()}')">
+                <div class="item-icon">
+                    <svg width="24" height="24" fill="var(--primary)" viewBox="0 0 16 16"><path d="M3 4.5a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7zm2 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-7zm3 0a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0v-7z"/></svg>
+                </div>
+                <div class="item-info">
+                    <div class="prod-name">${item.descProduto}</div>
+                    <div class="prod-detail">
+                        Serial: <strong>${item.serial.trim()}</strong> | ${item.nomeCli}<br>
+                        Lote: ${item.lote} | Val: ${formatDate(item.validade)} | ${formatMoney(item.preco)}
+                    </div>
+                </div>
+                <span class="badge badge-info">Usar</span>
+            </div>`;
+        });
+
+        div.innerHTML = html;
+    } catch (e) {
+        hideLoading();
+        showToast('Erro: ' + e.message, 'error');
+    }
+}
+
+function usarConsignado(serial) {
+    navegarPara('telaScanner');
+    document.getElementById('inputSerial').value = serial;
+    buscarSerial();
+}
+
+// ============================================================
+// HISTÓRICO
+// ============================================================
+function renderizarHistorico() {
+    const div = document.getElementById('listaHistorico');
+
+    if (historicoReservas.length === 0) {
+        div.innerHTML = `<div class="empty-state">
+            <svg width="64" height="64" fill="var(--gray-500)" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/></svg>
+            <p>As reservas criadas nesta sessão aparecerão aqui</p>
+        </div>`;
+        return;
+    }
+
+    let html = '';
+    historicoReservas.forEach(r => {
+        html += `
+        <div class="card">
+            <div class="card-header">
+                <h4>${r.pedido}</h4>
+                <span class="badge badge-success">✓ Gerado</span>
+            </div>
+            <div class="card-body">
+                <div class="row"><span class="label">Cliente:</span><span>${r.cliente}</span></div>
+                <div class="row"><span class="label">Paciente:</span><span>${r.paciente}</span></div>
+                <div class="row"><span class="label">Data Uso:</span><span>${r.dtUso}</span></div>
+                <div class="row"><span class="label">Itens:</span><span>${r.qtdItens}</span></div>
+                <div class="row"><span class="label">Valor:</span><span style="font-weight:700;">${formatMoney(r.valor)}</span></div>
+                <div class="row"><span class="label">Hora:</span><span>${r.hora}</span></div>
+            </div>
+        </div>`;
+    });
+
+    div.innerHTML = html;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+    autoLogin();
+    renderizarItens();
+});
+</script>
+
+</body>
+</html>

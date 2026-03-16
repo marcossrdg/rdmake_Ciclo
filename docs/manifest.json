@@ -1,0 +1,18 @@
+{
+    "name": "CicloMed Reservas",
+    "short_name": "Reservas",
+    "description": "App de reserva de materiais - CicloMed",
+    "start_url": "./reserva.html",
+    "display": "standalone",
+    "background_color": "#f8f9fa",
+    "theme_color": "#0d6efd",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%230d6efd'/%3E%3Ctext x='256' y='210' font-size='140' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3ECICLO%3C/text%3E%3Ctext x='256' y='340' font-size='120' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EMED%3C/text%3E%3C/svg%3E",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}
