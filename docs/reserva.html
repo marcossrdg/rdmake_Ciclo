@@ -533,7 +533,13 @@ async function apiGet(params) {
         method: 'GET',
         headers: { 'Authorization': AUTH }
     });
-    return await resp.json();
+    const text = await resp.text();
+    try { return JSON.parse(text); }
+    catch(e) {
+        if (text.includes('<!DOCTYPE') || text.includes('<html'))
+            throw new Error('Servidor indisponível (endpoint não compilado)');
+        throw new Error('Resposta inválida do servidor');
+    }
 }
 
 async function apiPost(body) {
@@ -545,7 +551,13 @@ async function apiPost(body) {
         },
         body: JSON.stringify(body)
     });
-    return await resp.json();
+    const text = await resp.text();
+    try { return JSON.parse(text); }
+    catch(e) {
+        if (text.includes('<!DOCTYPE') || text.includes('<html'))
+            throw new Error('Servidor indisponível (endpoint não compilado)');
+        throw new Error('Resposta inválida do servidor');
+    }
 }
 
 // ============================================================
