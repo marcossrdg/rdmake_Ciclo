@@ -552,7 +552,7 @@ Static Function fCriarReserva(oJson)
 Return cJson
 
 //=====================================================================
-// fSalvarFotos - Salva fotos de documentos na ZZ1010
+// fSalvarFotos - Salva fotos como JPG na pasta do servidor e registra caminho na ZZ1010
 //=====================================================================
 Static Function fSalvarFotos(oJson, cPedido, cVend, cFil)
     Local aFotos   := oJson:GetJsonObject("fotos")
@@ -563,10 +563,22 @@ Static Function fSalvarFotos(oJson, cPedido, cVend, cFil)
     Local cData    := DtoS(Date())
     Local cHora    := SubStr(Time(), 1, 5)
     Local cSQL     := ""
+    Local cPasta   := "\docs_reserv\" + AllTrim(cPedido) + "\"
+    Local cArquivo := ""
+    Local cBinario := ""
+    Local nHandle  := 0
     Local nI       := 0
 
     If aFotos == Nil .Or. Len(aFotos) == 0
         Return
+    EndIf
+
+    // Criar pasta se nao existe
+    If !ExistDir("\docs_reserv\")
+        MakeDir("\docs_reserv\")
+    EndIf
+    If !ExistDir(cPasta)
+        MakeDir(cPasta)
     EndIf
 
     For nI := 1 To Len(aFotos)
@@ -580,13 +592,25 @@ Static Function fSalvarFotos(oJson, cPedido, cVend, cFil)
             cBase64 := SubStr(cBase64, At("base64,", cBase64) + 7)
         EndIf
 
+        // Decodificar base64 e gravar arquivo JPG
+        cBinario := Decode64(cBase64)
+        cArquivo := cPasta + cDesc + ".jpg"
+
+        nHandle := FCreate(cArquivo)
+        If nHandle >= 0
+            FWrite(nHandle, cBinario)
+            FClose(nHandle)
+            ConOut("[WSRESERVA] Foto salva: " + cArquivo)
+        Else
+            ConOut("[WSRESERVA] Erro ao criar arquivo: " + cArquivo)
+        EndIf
+
+        // Registrar caminho na ZZ1010
         cSQL := "INSERT INTO ZZ1010 (ZZ1_FILIAL, ZZ1_PEDIDO, ZZ1_SEQ, ZZ1_DESC, ZZ1_DATA, ZZ1_HORA, ZZ1_VEND, ZZ1_IMAGEM) "
-        cSQL += "VALUES ('" + cFil + "', '" + cPedido + "', '" + cSeq + "', '" + cDesc + "', '" + cData + "', '" + cHora + "', '" + cVend + "', '" + cBase64 + "')"
+        cSQL += "VALUES ('" + cFil + "', '" + cPedido + "', '" + cSeq + "', '" + cDesc + "', '" + cData + "', '" + cHora + "', '" + cVend + "', '" + cArquivo + "')"
 
         If TCSqlExec(cSQL) < 0
-            ConOut("[WSRESERVA] Erro ao salvar foto " + cSeq + " do pedido " + cPedido)
-        Else
-            ConOut("[WSRESERVA] Foto " + cSeq + " salva para pedido " + cPedido)
+            ConOut("[WSRESERVA] Erro ao registrar foto " + cSeq + " no banco")
         EndIf
     Next
 
