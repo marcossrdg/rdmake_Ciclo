@@ -8,6 +8,7 @@
     <meta name="theme-color" content="#0d6efd">
     <title>CicloMed - Reserva</title>
     <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%230d6efd'/%3E%3Ctext x='50' y='62' font-size='40' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3ECM%3C/text%3E%3C/svg%3E">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -169,6 +170,32 @@
             border-radius: 8px;
             flex-shrink: 0;
         }
+        .btn-camera {
+            width: 52px;
+            height: 52px;
+            padding: 0;
+            border-radius: 8px;
+            flex-shrink: 0;
+            background: var(--success);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-camera.ativo { background: var(--danger); }
+        #scannerContainer {
+            display: none;
+            margin-top: 12px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            position: relative;
+            background: #000;
+        }
+        #scannerContainer.show { display: block; }
+        #reader { width: 100%; }
+        #reader video { border-radius: var(--radius); }
 
         /* ITEM LISTA */
         .item-reserva {
@@ -402,6 +429,12 @@
             <button class="btn btn-primary btn-scan" onclick="buscarSerial()" title="Buscar">
                 <svg width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.156a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
             </button>
+            <button class="btn-camera" id="btnCamera" onclick="toggleScanner()" title="Escanear com câmera">
+                <svg width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"/></svg>
+            </button>
+        </div>
+        <div id="scannerContainer">
+            <div id="reader"></div>
         </div>
     </div>
 
@@ -671,6 +704,61 @@ function autoLogin() {
         } catch(e) {
             localStorage.removeItem('cm_user');
         }
+    }
+}
+
+// ============================================================
+// SCANNER CÂMERA
+// ============================================================
+let html5QrCode = null;
+let scannerAtivo = false;
+
+function toggleScanner() {
+    if (scannerAtivo) {
+        pararScanner();
+    } else {
+        iniciarScanner();
+    }
+}
+
+function iniciarScanner() {
+    const container = document.getElementById('scannerContainer');
+    const btn = document.getElementById('btnCamera');
+    container.classList.add('show');
+    btn.classList.add('ativo');
+    btn.title = 'Parar câmera';
+    scannerAtivo = true;
+
+    html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 280, height: 120 }, aspectRatio: 1.5 },
+        (decodedText) => {
+            // Sucesso: preenche o campo e busca
+            const serial = decodedText.replace(/\D/g, '');
+            document.getElementById('inputSerial').value = serial;
+            pararScanner();
+            showToast('Código lido: ' + serial, 'success');
+            buscarSerial();
+        },
+        () => {} // erro silencioso a cada frame
+    ).catch((err) => {
+        showToast('Erro ao acessar câmera: ' + err, 'error');
+        pararScanner();
+    });
+}
+
+function pararScanner() {
+    const container = document.getElementById('scannerContainer');
+    const btn = document.getElementById('btnCamera');
+    container.classList.remove('show');
+    btn.classList.remove('ativo');
+    btn.title = 'Escanear com câmera';
+    scannerAtivo = false;
+
+    if (html5QrCode) {
+        html5QrCode.stop().catch(() => {});
+        html5QrCode = null;
     }
 }
 
