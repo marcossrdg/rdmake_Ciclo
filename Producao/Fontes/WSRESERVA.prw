@@ -199,7 +199,7 @@ Static Function fBuscarSerial(cSerial, cVend)
     Local cVendPed  := ""
     Local cCondPag  := ""
 
-    ConOut("[WSRESERVA] xFilial SDB=[" + xFilial("SDB") + "] SB6=[" + xFilial("SB6") + "] SC6=[" + xFilial("SC6") + "]")
+    ConOut("[WSRESERVA] fBuscarSerial - cFilAnt=[" + cFilAnt + "] xFilial SDB=[" + xFilial("SDB") + "] SB6=[" + xFilial("SB6") + "]")
 
     // Busca serial na SDB (mesmo criterio do CHKITEMPV) - busca simples primeiro
     cQry := " SELECT TOP 1 "
@@ -222,7 +222,7 @@ Static Function fBuscarSerial(cSerial, cVend)
     cQry += "   COALESCE(RTRIM(D2.D2_IDENTB6),'') AS D2_IDENTB6, "
     cQry += "   RTRIM(B1.B1_DESC)    AS DESC_PROD, "
     cQry += "   COALESCE((SELECT TOP 1 C6_NUM FROM " + RetSqlName("SC6") + " SC6 "
-    cQry += "     WHERE SC6.D_E_L_E_T_='' AND SC6.C6_FILIAL='" + xFilial("SC6") + "' "
+    cQry += "     WHERE SC6.D_E_L_E_T_='' AND SC6.C6_FILIAL='" + cFilAnt + "' "
     cQry += "     AND SC6.C6_NUMSERI=DB.DB_NUMSERI AND SC6.C6_QTDENT=0),'      ') AS PEDIDO "
     // Tabela principal: SDB (mesmo criterio CHKITEMPV)
     cQry += " FROM " + RetSqlName("SDB") + " DB WITH (NOLOCK) "
@@ -235,7 +235,7 @@ Static Function fBuscarSerial(cSerial, cVend)
     cQry += "   ON B1.D_E_L_E_T_ = '' AND B1.B1_COD = DB.DB_PRODUTO "
     // Filtros: mesmo criterio CHKITEMPV - sem filtro de origem, sem estorno
     cQry += " WHERE DB.D_E_L_E_T_ = '' "
-    cQry += "   AND DB.DB_FILIAL = '" + xFilial("SDB") + "' "
+    cQry += "   AND DB.DB_FILIAL = '" + cFilAnt + "' "
     cQry += "   AND DB.DB_NUMSERI = '" + cSerial + "' "
     cQry += "   AND DB.DB_ESTORNO <> 'S' "
     cQry += " ORDER BY DB.DB_DATA DESC, DB.DB_IDOPERA DESC "
@@ -244,10 +244,10 @@ Static Function fBuscarSerial(cSerial, cVend)
 
     // Trava 1: Serial nao existe nesta filial
     If (cAlias)->(Eof())
-        ConOut("[WSRESERVA] TRAVA 1 - Serial NAO encontrado na SDB. Filial filtrada: [" + xFilial("SDB") + "]")
+        ConOut("[WSRESERVA] TRAVA 1 - Serial NAO encontrado na SDB. cFilAnt=[" + cFilAnt + "]")
         (cAlias)->(dbCloseArea())
         RestArea(aArea)
-        Return '{"ok":false,"msg":"Serial nao encontrado nesta filial (xFilial='+xFilial('SDB')+')"}'
+        Return '{"ok":false,"msg":"Serial nao encontrado nesta filial (fil='+cFilAnt+')"}'
     Else
         ConOut("[WSRESERVA] SDB encontrou - Produto: " + AllTrim((cAlias)->PRODUTO) + " Cliente: " + AllTrim((cAlias)->CLIFOR))
     EndIf
@@ -307,7 +307,7 @@ Static Function fBuscarSerial(cSerial, cVend)
     cQryB6 += "   ON SC5.D_E_L_E_T_ = '' AND SC5.C5_FILIAL = D2B.D2_FILIAL "
     cQryB6 += "   AND SC5.C5_NUM = D2B.D2_PEDIDO "
     cQryB6 += " WHERE B6.D_E_L_E_T_ = '' "
-    cQryB6 += "   AND B6.B6_FILIAL = '" + xFilial("SB6") + "' "
+    cQryB6 += "   AND B6.B6_FILIAL = '" + cFilAnt + "' "
     cQryB6 += "   AND B6.B6_PRODUTO = '" + cProduto + "' "
     cQryB6 += "   AND B6.B6_CLIFOR = '" + cCliFor + "' "
     cQryB6 += "   AND B6.B6_LOJA = '" + cLoja + "' "
@@ -317,7 +317,7 @@ Static Function fBuscarSerial(cSerial, cVend)
 
     // Trava 3: Nao tem consignacao ativa na SB6
     If (cAliasB6)->(Eof())
-        ConOut("[WSRESERVA] TRAVA 3 - SB6 vazio. Produto: " + cProduto + " CliFor: " + cCliFor + " Loja: " + cLoja + " xFilial SB6: [" + xFilial("SB6") + "]")
+        ConOut("[WSRESERVA] TRAVA 3 - SB6 vazio. Produto: " + cProduto + " CliFor: " + cCliFor + " Loja: " + cLoja + " cFilAnt=[" + cFilAnt + "]")
         (cAliasB6)->(dbCloseArea())
         RestArea(aArea)
         // Se tem DOC na SDB, o serial ja foi baixado
@@ -636,7 +636,7 @@ Static Function fCriarReserva(oJson)
         ConfirmSX8()
         EndTran()
 
-        //--- Salvar fotos na ZZ1010 ---
+        //--- Salvar fotos no Banco de Conhecimento ---
         fSalvarFotos(oJson, cNumPed, cVend, cFil)
 
         ConOut("[WSRESERVA] Reserva " + cNumPed + " gerada com sucesso!")
@@ -647,31 +647,43 @@ Static Function fCriarReserva(oJson)
 Return cJson
 
 //=====================================================================
-// fSalvarFotos - Salva fotos como JPG na pasta do servidor e registra caminho na ZZ1010
+// fSalvarFotos - Salva fotos no Banco de Conhecimento (ACB) e vincula ao PV (AC9)
 //=====================================================================
 Static Function fSalvarFotos(oJson, cPedido, cVend, cFil)
-    Local aFotos   := oJson:GetJsonObject("fotos")
-    Local oFoto    := Nil
-    Local cBase64  := ""
-    Local cDesc    := ""
-    Local cSeq     := ""
-    Local cData    := DtoS(Date())
-    Local cHora    := SubStr(Time(), 1, 5)
-    Local cSQL     := ""
-    Local cPasta   := "\docs_reserv\" + AllTrim(cPedido) + "\"
-    Local cArquivo := ""
-    Local cBinario := ""
-    Local nHandle  := 0
-    Local nI       := 0
+    Local aFotos    := oJson:GetJsonObject("fotos")
+    Local oFoto     := Nil
+    Local cBase64   := ""
+    Local cDesc     := ""
+    Local cBinario  := ""
+    Local cArquivo  := ""
+    Local cNomeArq  := ""
+    Local cCodObj   := ""
+    Local cPasta    := ""
+    Local cEntidade := "SC5"
+    Local cCodEnt   := ""
+    Local nHandle   := 0
+    Local nI        := 0
+    Local nProxCod  := 0
+    Local cAliasAux := ""
+    Local cQryAux   := ""
 
     If aFotos == Nil .Or. Len(aFotos) == 0
         Return
     EndIf
 
-    // Criar pasta se nao existe
-    If !ExistDir("\docs_reserv\")
-        MakeDir("\docs_reserv\")
-    EndIf
+    // Montar o CODENT no formato que o Protheus espera para SC5
+    // Baseado nos existentes: filial + dados identificadores
+    cCodEnt := PadR(AllTrim(cPedido), 70)
+
+    // Buscar proximo codigo de objeto no ACB
+    cAliasAux := GetNextAlias()
+    cQryAux := "SELECT ISNULL(MAX(CAST(ACB_CODOBJ AS INT)),0) AS MAXCOD FROM " + RetSqlName("ACB") + " WHERE D_E_L_E_T_=' '"
+    dbUseArea(.T., "TOPCONN", TCGenQry(,,cQryAux), cAliasAux, .F., .T.)
+    nProxCod := (cAliasAux)->MAXCOD
+    (cAliasAux)->(dbCloseArea())
+
+    // Pasta do Banco de Conhecimento no rootpath do Protheus
+    cPasta := "\knowledge\"
     If !ExistDir(cPasta)
         MakeDir(cPasta)
     EndIf
@@ -680,7 +692,6 @@ Static Function fSalvarFotos(oJson, cPedido, cVend, cFil)
         oFoto   := aFotos[nI]
         cBase64 := AllTrim(oFoto:GetJsonObject("base64"))
         cDesc   := AllTrim(oFoto:GetJsonObject("desc"))
-        cSeq    := StrZero(nI, 3)
 
         // Remover prefixo data:image/jpeg;base64, se existir
         If "base64," $ cBase64
@@ -689,24 +700,46 @@ Static Function fSalvarFotos(oJson, cPedido, cVend, cFil)
 
         // Decodificar base64 e gravar arquivo JPG
         cBinario := Decode64(cBase64)
-        cArquivo := cPasta + cDesc + ".jpg"
+        cNomeArq := "RES_" + AllTrim(cPedido) + "_" + StrZero(nI, 2) + ".jpg"
+        cArquivo := cPasta + cNomeArq
 
         nHandle := FCreate(cArquivo)
         If nHandle >= 0
             FWrite(nHandle, cBinario)
             FClose(nHandle)
-            ConOut("[WSRESERVA] Foto salva: " + cArquivo)
+            ConOut("[WSRESERVA] Foto salva no KB: " + cArquivo)
         Else
-            ConOut("[WSRESERVA] Erro ao criar arquivo: " + cArquivo)
+            ConOut("[WSRESERVA] Erro ao criar arquivo: " + cArquivo + " - Erro: " + Str(FError()))
+            Loop
         EndIf
 
-        // Registrar caminho na ZZ1010
-        cSQL := "INSERT INTO ZZ1010 (ZZ1_FILIAL, ZZ1_PEDIDO, ZZ1_SEQ, ZZ1_DESC, ZZ1_DATA, ZZ1_HORA, ZZ1_VEND, ZZ1_IMAGEM) "
-        cSQL += "VALUES ('" + cFil + "', '" + cPedido + "', '" + cSeq + "', '" + cDesc + "', '" + cData + "', '" + cHora + "', '" + cVend + "', '" + cArquivo + "')"
+        // Gerar proximo codigo de objeto
+        nProxCod++
+        cCodObj := StrZero(nProxCod, 10)
 
-        If TCSqlExec(cSQL) < 0
-            ConOut("[WSRESERVA] Erro ao registrar foto " + cSeq + " no banco")
+        // Inserir registro no ACB (Banco de Conhecimento)
+        ACB->(dbSetOrder(1))
+        If RecLock("ACB", .T.)
+            ACB->ACB_FILIAL := cFil
+            ACB->ACB_CODOBJ := cCodObj
+            ACB->ACB_OBJETO := cNomeArq
+            ACB->ACB_DESCRI := "Reserva " + AllTrim(cPedido) + " - " + cDesc
+            MsUnlock()
+            ConOut("[WSRESERVA] ACB criado: " + cCodObj + " - " + cNomeArq)
+        EndIf
+
+        // Inserir vinculo no AC9 (Vinculo Banco de Conhecimento -> Pedido de Venda)
+        AC9->(dbSetOrder(1))
+        If RecLock("AC9", .T.)
+            AC9->AC9_FILIAL := cFil
+            AC9->AC9_FILENT := cFil
+            AC9->AC9_ENTIDA := cEntidade
+            AC9->AC9_CODENT := cCodEnt
+            AC9->AC9_CODOBJ := cCodObj
+            MsUnlock()
+            ConOut("[WSRESERVA] AC9 vinculo criado: " + cCodObj + " -> SC5/" + AllTrim(cPedido))
         EndIf
     Next
 
+    ConOut("[WSRESERVA] " + Str(Len(aFotos)) + " foto(s) salvas no Banco de Conhecimento para pedido " + AllTrim(cPedido))
 Return
