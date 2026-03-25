@@ -226,9 +226,8 @@
                 return;
             }
 
-            // Monta URL da API — escolhe endpoint REST pela filial
-            var restPath = (fil.trim() === '01') ? 'rest' : 'rest02';
-            var apiUrl = 'https://ciclomed161112.protheus.cloudtotvs.com.br:1557/' + restPath + '/WSAPROVSC'
+            // Monta URL da API — rest03 tem acesso a todas as filiais (mesmo endpoint do WSAPROVPC)
+            var apiUrl = 'https://ciclomed161112.protheus.cloudtotvs.com.br:1557/rest03/WSAPROVSC'
                 + '?sc='    + encodeURIComponent(sc)
                 + '&item='  + encodeURIComponent(item)
                 + '&acao='  + encodeURIComponent(acao)
