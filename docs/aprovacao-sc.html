@@ -249,28 +249,45 @@
             .then(function(data) {
                 var body = data.body;
 
+                // Tenta extrair mensagem de erro JSON do Protheus (ex: {"code":500,"message":"..."})
+                var jsonTitle = '', jsonMsg = '';
+                try {
+                    var json = JSON.parse(body);
+                    if (json.message || json.errorMessage) {
+                        jsonTitle = 'Erro ' + (json.code || json.errorCode || data.status);
+                        jsonMsg   = json.message || json.errorMessage || '';
+                    }
+                } catch(e) {}
+
                 // Extrai titulo e mensagem do HTML retornado pelo Protheus
                 var titleMatch = body.match(/<h1[^>]*>([^<]+)<\/h1>/i);
                 var msgMatch   = body.match(/<p[^>]*color:#666[^>]*>([^<]+)<\/p>/i);
 
-                var title   = titleMatch ? titleMatch[1] : '';
-                var message = msgMatch   ? msgMatch[1]   : '';
+                var title   = titleMatch ? titleMatch[1] : (jsonTitle || '');
+                var message = msgMatch   ? msgMatch[1]   : (jsonMsg   || '');
 
                 if (data.status === 200 && body.indexOf('#27ae60') !== -1) {
                     showResult('success', title || (acaoTexto + ' Realizado!'),
                         message || ('SC ' + sc + ' - ' + itemTexto + ' processado com sucesso.'));
                 } else if (body.indexOf('#c0392b') !== -1) {
-                    showResult('error', title || 'Erro',
-                        message || 'Não foi possível processar a solicitação.');
+                    showResult('error', title || 'Não Processado',
+                        message || 'Não foi possível processar a solicitação.',
+                        'Verifique se o item já foi aprovado/rejeitado anteriormente ou acesse SIGACOM > Solicitações de Compras (MATA110).');
                 } else if (body.indexOf('#e67e22') !== -1) {
                     showResult('warning', title || 'Atenção',
-                        message || body.replace(/<[^>]+>/g, '').substring(0, 200));
+                        message || body.replace(/<[^>]+>/g, '').substring(0, 200),
+                        'Acesse SIGACOM > Solicitações de Compras (MATA110) para verificar o status do item.');
+                } else if (jsonTitle) {
+                    showResult('error', jsonTitle,
+                        jsonMsg || 'Erro interno no servidor Protheus.',
+                        'Código: ' + data.status + '. Contate o administrador do sistema se o problema persistir.');
                 } else if (data.status === 200) {
                     showResult('success', title || 'Processado!',
                         message || 'Solicitação processada com sucesso.');
                 } else {
                     showResult('error', 'Erro ' + data.status,
-                        message || 'Erro ao processar a solicitação. Tente novamente.');
+                        message || 'Erro ao processar a solicitação.',
+                        'Acesse SIGACOM > Solicitações de Compras (MATA110) para verificar o status ou contate o suporte.');
                 }
             })
             .catch(function(error) {
