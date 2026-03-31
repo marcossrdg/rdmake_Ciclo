@@ -1517,7 +1517,6 @@ const PRODUTOS = [
 ];
 let matItens = [];
 let _matTimer = null;
-let _restOk   = null; // null=não testado, true=ok, false=offline
 
 function initMatWidget() {
     const input = document.getElementById('matInput');
@@ -1545,27 +1544,23 @@ async function buscarProdutos(q) {
     const input = document.getElementById('matInput');
     let hits = [];
 
-    // Tenta REST (Protheus SB1) se ainda não marcado como offline
-    if (_restOk !== false) {
-        try {
-            const r = await fetch(
-                REST_URL + '?acao=produtos&q=' + encodeURIComponent(q),
-                { signal: AbortSignal.timeout(4000) }
-            );
-            if (r.ok) {
-                const j = await r.json();
-                if (Array.isArray(j.produtos)) {
-                    hits = j.produtos;
-                    _restOk = true;
-                }
-            }
-        } catch(_) { _restOk = false; }
-    }
+    // Tenta REST (Protheus SB1) — sem cache de falha, tenta sempre
+    try {
+        const r = await fetch(
+            REST_URL + '?acao=produtos&q=' + encodeURIComponent(q),
+            { signal: AbortSignal.timeout(5000) }
+        );
+        if (r.ok) {
+            const j = await r.json();
+            if (Array.isArray(j.produtos)) hits = j.produtos;
+        }
+    } catch(_) { /* REST offline — cai no fallback */ }
 
-    // Fallback: lista estática local
-    if (_restOk === false) {
+    // Fallback: lista estática (sempre, se REST não trouxe nada)
+    if (!hits.length) {
         hits = PRODUTOS.filter(p =>
-            p.desc.toUpperCase().includes(q.toUpperCase())
+            p.desc.toUpperCase().includes(q.toUpperCase()) ||
+            (p.cod||'').toUpperCase().includes(q.toUpperCase())
         ).slice(0, 10);
     }
 
