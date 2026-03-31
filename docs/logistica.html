@@ -478,19 +478,22 @@
 
         /* ── MATERIAIS AUTOCOMPLETE ──────────────────────────── */
         .mat-widget { position:relative; }
-        .mat-input-row { display:flex; gap:8px; align-items:stretch; }
-        .mat-ac-wrap { flex:1; position:relative; }
-        .mat-ac-wrap input {
+        .mat-input-row { display:flex; flex-direction:column; gap:8px; }
+        .mat-prod-row  { position:relative; width:100%; }
+        .mat-prod-row input {
             width:100%; padding:14px 16px;
             border:2px solid var(--gray-200); border-radius:var(--radius-sm);
             font-size:15px; background:white;
             transition:border-color .2s, box-shadow .2s;
-            color:var(--gray-900); font-family:inherit; -webkit-appearance:none;
+            color:var(--gray-900); font-family:inherit; -webkit-appearance:none; appearance:none;
         }
-        .mat-ac-wrap input:focus {
+        .mat-prod-row input:focus {
             outline:none; border-color:var(--primary);
             box-shadow:0 0 0 3px rgba(27,122,61,.1);
         }
+        .mat-qtd-row { display:flex; gap:8px; align-items:center; }
+        .mat-qtd-lbl { font-size:12px; font-weight:700; color:var(--gray-500); white-space:nowrap; text-transform:uppercase; letter-spacing:.4px; }
+        .mat-ac-wrap { display:none; }
         .mat-dropdown {
             display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
             background:white; border:2px solid var(--primary);
@@ -513,9 +516,11 @@
         }
         .mat-qtd:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(27,122,61,.1); }
         .mat-add-btn {
-            padding:0 18px; background:var(--primary); color:white;
-            border:none; border-radius:var(--radius-sm); font-size:22px;
-            font-weight:700; cursor:pointer; transition:background .15s; line-height:1;
+            display:inline-flex; align-items:center; gap:6px;
+            padding:0 20px; height:50px; background:var(--primary); color:white;
+            border:none; border-radius:var(--radius-sm); font-size:14px;
+            font-weight:700; cursor:pointer; transition:background .15s; font-family:inherit;
+            white-space:nowrap;
         }
         .mat-add-btn:active { background:var(--primary-dark); }
         .mat-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; min-height:0; }
@@ -697,12 +702,18 @@
             <label id="lblMat">9. Materiais solicitados e qtde <span class="req">*</span></label>
             <div class="mat-widget">
                 <div class="mat-input-row">
-                    <div class="mat-ac-wrap">
-                        <input type="text" id="matInput" placeholder="Código ou nome do produto" autocomplete="off">
+                    <div class="mat-prod-row">
+                        <input type="text" id="matInput" placeholder="Digite o código ou nome do produto" autocomplete="off">
                         <div class="mat-dropdown" id="matDropdown"></div>
                     </div>
-                    <input type="number" class="mat-qtd" id="matQtd" min="1" value="1" title="Quantidade">
-                    <button type="button" class="mat-add-btn" onclick="adicionarMat()" title="Adicionar">+</button>
+                    <div class="mat-qtd-row">
+                        <span class="mat-qtd-lbl">Qtde:</span>
+                        <input type="number" class="mat-qtd" id="matQtd" min="1" value="1">
+                        <button type="button" class="mat-add-btn" onclick="adicionarMat()">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                            Adicionar item
+                        </button>
+                    </div>
                 </div>
                 <div class="mat-chips" id="matChips"></div>
                 <div class="mat-hint" id="matHint">Digite o produto, informe a quantidade e clique em +</div>
