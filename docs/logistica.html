@@ -1232,6 +1232,9 @@ function abrirDetalhe(id) {
         { l:'Materiais Solicitados', v:r.materiais },
         ...(r.observacao ? [{ l:'Observação', v:r.observacao }] : []),
         ...(r.anexo       ? [{ l:'Anexo',      v:'📎 ' + r.anexo }] : []),
+        ...(!pend && r.pedido  ? [{ l:'Nº Pedido',  v:r.pedido }] : []),
+        ...(!pend && r.nf      ? [{ l:'Nº NF',      v:r.nf }] : []),
+        ...(!pend && r.dataAten? [{ l:'Atendido em',v:r.dataAten }] : []),
     ];
 
     document.getElementById('mdFields').innerHTML = campos.map(c => `
@@ -1268,25 +1271,65 @@ function fecharModal(e) {
 }
 
 function marcarAtendido() {
-    setStatus('A');
+    const data = getData();
+    const r = data.find(x => x.id === detId);
+    const vendAtual = (r && r.vendedor) ? r.vendedor : '(não informado)';
+
+    document.getElementById('mdActs').innerHTML = `
+        <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+            <div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Vendedor responsável</div>
+            <div style="font-size:15px;font-weight:600;color:var(--gray-900)">${esc(vendAtual)}</div>
+        </div>
+        <div style="margin-bottom:14px">
+            <label style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em">Nº do Pedido *</label>
+            <input type="text" id="inpPedido"
+                style="width:100%;padding:12px 14px;border:2px solid var(--gray-200);border-radius:10px;font-size:15px;margin-top:6px;box-sizing:border-box;outline:none"
+                placeholder="Ex: PED-000123" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--gray-200)'">
+        </div>
+        <div style="margin-bottom:18px">
+            <label style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em">Nº da Nota Fiscal *</label>
+            <input type="text" id="inpNF"
+                style="width:100%;padding:12px 14px;border:2px solid var(--gray-200);border-radius:10px;font-size:15px;margin-top:6px;box-sizing:border-box;outline:none"
+                placeholder="Ex: NF-007812" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--gray-200)'">
+        </div>
+        <button class="btn btn-success" onclick="confirmarAtendido()">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Confirmar Atendimento
+        </button>
+        <button class="btn btn-outline" onclick="abrirDetalhe(detId)">Cancelar</button>`;
+}
+
+function confirmarAtendido() {
+    const pedido = document.getElementById('inpPedido').value.trim();
+    const nf     = document.getElementById('inpNF').value.trim();
+    if (!pedido) { toast('Informe o número do pedido', 'error'); document.getElementById('inpPedido').focus(); return; }
+    if (!nf)     { toast('Informe o número da NF', 'error'); document.getElementById('inpNF').focus(); return; }
+    setStatus('A', pedido, nf);
     toast('✓ Marcado como atendido!', 'success');
 }
 function reverterPendente() {
-    setStatus('P');
+    setStatus('P', '', '');
     toast('↩ Revertido para pendente');
 }
-async function setStatus(s) {
+async function setStatus(s, pedido, nf) {
     const data = getData();
     const idx  = data.findIndex(x => x.id === detId);
     if (idx === -1) return;
-    // Atualiza localStorage imediatamente (otimistic update)
     data[idx].status = s;
+    if (s === 'A') {
+        data[idx].pedido   = pedido || '';
+        data[idx].nf       = nf     || '';
+        data[idx].dataAten = fmtDT(new Date());
+    } else {
+        data[idx].pedido   = '';
+        data[idx].nf       = '';
+        data[idx].dataAten = '';
+    }
     saveData(data);
     fecharModal();
     renderMonitor();
-    // Sincroniza com Protheus em background
     try {
-        await apiAtualizar(detId, s);
+        await apiAtualizar(detId, s, pedido, nf, data[idx].vendedor || '');
         await apiCarregar();
         renderMonitor();
     } catch(e) {
@@ -1330,11 +1373,12 @@ async function apiIncluir(dados) {
 }
 
 // Atualiza status de uma solicitação no Protheus
-async function apiAtualizar(id, status) {
+async function apiAtualizar(id, status, pedido, nf, vend) {
     const r = await fetch(REST_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': AUTH },
-        body: JSON.stringify({ acao: 'atualizar', id, status }),
+        body: JSON.stringify({ acao: 'atualizar', id, status,
+            pedido: pedido || '', nf: nf || '', vendedor: vend || '' }),
         signal: AbortSignal.timeout(8000)
     });
     if (!r.ok) throw new Error('HTTP ' + r.status);

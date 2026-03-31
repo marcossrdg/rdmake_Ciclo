@@ -434,6 +434,7 @@ Static Function fAtualizarLog(oJson)
     Local cStatus := Upper(AllTrim(jStr(oJson,"status")))
     Local cPedido := Left(jStr(oJson,"pedido"), 20)
     Local cNF     := Left(jStr(oJson,"nf"), 20)
+    Local cVend   := Left(jStr(oJson,"vendedor"), 80)
     Local nRet    := 0
 
     If Empty(cId)
@@ -458,6 +459,7 @@ Static Function fAtualizarLog(oJson)
             "UPDATE ZLG010 SET ZLG_STATUS = 'A'," + ;
             " ZLG_PEDIDO = '" + fSqlStr(cPedido) + "'," + ;
             " ZLG_NF = '"     + fSqlStr(cNF)     + "'," + ;
+            iif(!Empty(cVend), " ZLG_VEND = '" + fSqlStr(cVend) + "',", "") + ;
             " ZLG_DTATEN = '" + DToS(Date())     + "'," + ;
             " ZLG_HRATEN = '" + Left(Time(),5)   + "'" + ;
             " WHERE D_E_L_E_T_ = ' ' AND ZLG_ID = '" + fSqlStr(cId) + "'" )
