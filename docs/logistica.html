@@ -652,9 +652,21 @@
     <div class="form-content">
         <h2 class="step-question" id="detTitulo" style="color:var(--primary); font-size:22px; margin-bottom:20px;"></h2>
 
+        <!-- Vendedor -->
+        <div class="form-group">
+            <label>3. Vendedor responsável <span class="req">*</span></label>
+            <div class="hosp-widget">
+                <div class="hosp-nome-wrap">
+                    <input type="text" id="fVendNome" placeholder="Digite o nome do vendedor" autocomplete="off">
+                    <div class="hosp-dropdown" id="vendDropdown"></div>
+                </div>
+                <input type="hidden" id="fVendedor">
+            </div>
+        </div>
+
         <!-- Hospital -->
         <div class="form-group">
-            <label id="lblHosp">3. Hospital <span class="req">*</span></label>
+            <label id="lblHosp">4. Hospital <span class="req">*</span></label>
             <div class="hosp-widget">
                 <div class="hosp-nome-wrap">
                     <input type="text" id="fHospNome" placeholder="Digite o nome do hospital" autocomplete="off">
@@ -666,37 +678,37 @@
 
         <!-- Paciente (hidden for REPOSIÇÃO) -->
         <div class="form-group" id="grpPac">
-            <label>4. Nome do paciente <span class="req">*</span></label>
+            <label>5. Nome do paciente <span class="req">*</span></label>
             <input type="text" id="fPaciente" placeholder="Nome completo">
         </div>
 
         <!-- Data procedimento (hidden for REPOSIÇÃO) -->
         <div class="form-group" id="grpData">
-            <label>5. Data do procedimento <span class="req">*</span></label>
+            <label>6. Data do procedimento <span class="req">*</span></label>
             <input type="date" id="fDataProc">
         </div>
 
         <!-- Hora procedimento (hidden for REPOSIÇÃO) -->
         <div class="form-group" id="grpHora">
-            <label>6. Hora do procedimento <span class="req">*</span></label>
+            <label>7. Hora do procedimento <span class="req">*</span></label>
             <input type="time" id="fHoraProc">
         </div>
 
         <!-- Convênio (hidden for REPOSIÇÃO) -->
         <div class="form-group" id="grpConv">
-            <label>7. Convênio <span class="req">*</span></label>
+            <label>8. Convênio <span class="req">*</span></label>
             <input type="text" id="fConvenio" placeholder="Nome do convênio ou particular">
         </div>
 
         <!-- Médico (hidden for REPOSIÇÃO) -->
         <div class="form-group" id="grpMed">
-            <label>8. Médico <span class="req">*</span></label>
+            <label>9. Médico <span class="req">*</span></label>
             <input type="text" id="fMedico" placeholder="Nome do médico responsável">
         </div>
 
         <!-- Materiais -->
         <div class="form-group">
-            <label id="lblMat">9. Materiais solicitados e qtde <span class="req">*</span></label>
+            <label id="lblMat">10. Materiais solicitados e qtde <span class="req">*</span></label>
             <div class="mat-widget">
                 <div class="mat-input-row">
                     <div class="mat-prod-row">
@@ -720,13 +732,13 @@
 
         <!-- Observação -->
         <div class="form-group">
-            <label id="lblObs">10. Observação</label>
+            <label id="lblObs">11. Observação</label>
             <textarea id="fObservacao" placeholder="Informações adicionais (opcional)"></textarea>
         </div>
 
         <!-- Anexo -->
         <div class="form-group">
-            <label id="lblAnx">11. Anexo – (NÃO OBRIGATÓRIO)</label>
+            <label id="lblAnx">12. Anexo – (NÃO OBRIGATÓRIO)</label>
             <button type="button" class="file-btn" id="btnAnexo" onclick="document.getElementById('fArquivo').click()">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 Carregar arquivo
@@ -860,27 +872,32 @@ const DEMO = [
       prioridade:'URGENTE', tipo:'ELETIVO', hospital:'Hospital Sírio-Libanês',
       paciente:'João Carlos Silva', dataProc:'31/03/2026', horaProc:'10:30',
       convenio:'Bradesco Saúde', medico:'Dr. Carlos Menezes',
-      materiais:'G-NB2-50_0 x 2, MCFL2,7X150R x 1', observacao:'Cirurgia de emergência', anexo:'' },
+      materiais:'G-NB2-50_0 x 2, MCFL2,7X150R x 1', observacao:'Cirurgia de emergência', anexo:'',
+      vendedor:'', pedido:'', nf:'', dataAten:'' },
     { id:'D2', protocol:'LOG-0002', status:'A', dataEnvio:'31/03/2026 08:10',
       prioridade:'MÉDIA', tipo:'RESERVA', hospital:'Hospital Albert Einstein',
       paciente:'Maria Santos Oliveira', dataProc:'01/04/2026', horaProc:'14:00',
       convenio:'Unimed', medico:'Dra. Ana Paula Souza',
-      materiais:'MCFL2,9X150A x 1', observacao:'', anexo:'' },
+      materiais:'MCFL2,9X150A x 1', observacao:'', anexo:'',
+      vendedor:'Carlos Andrade', pedido:'PED-000045', nf:'NF-007812', dataAten:'31/03/2026 09:22' },
     { id:'D3', protocol:'LOG-0003', status:'P', dataEnvio:'31/03/2026 09:30',
       prioridade:'URGENTE', tipo:'REPOSIÇÃO', hospital:'Hospital das Clínicas – SP',
       paciente:'-', dataProc:'-', horaProc:'-', convenio:'-', medico:'-',
       materiais:'G-NB2-50_0 x 5, MCFL2,7X150R x 3, MCFL2,9X150A x 2',
-      observacao:'Reposição urgente – CC', anexo:'' },
+      observacao:'Reposição urgente – CC', anexo:'',
+      vendedor:'Ana Lima', pedido:'', nf:'', dataAten:'' },
     { id:'D4', protocol:'LOG-0004', status:'P', dataEnvio:'31/03/2026 10:15',
       prioridade:'BAIXA', tipo:'ELETIVO', hospital:'Hospital Santa Catarina',
       paciente:'Pedro Henrique Costa', dataProc:'02/04/2026', horaProc:'08:00',
       convenio:'SulAmérica', medico:'Dr. Roberto Lima',
-      materiais:'MCFL2,7X150R x 1', observacao:'', anexo:'' },
+      materiais:'MCFL2,7X150R x 1', observacao:'', anexo:'',
+      vendedor:'Marcos Silva', pedido:'', nf:'', dataAten:'' },
     { id:'D5', protocol:'LOG-0005', status:'A', dataEnvio:'31/03/2026 11:00',
       prioridade:'MÉDIA', tipo:'ELETIVO', hospital:'Beneficência Portuguesa',
       paciente:'Claudia Ferreira Rocha', dataProc:'01/04/2026', horaProc:'15:30',
       convenio:'Amil', medico:'Dra. Patricia Almeida',
-      materiais:'G-NB2-50_0 x 1', observacao:'Paciente diabética', anexo:'pedido_medico.pdf' }
+      materiais:'G-NB2-50_0 x 1', observacao:'Paciente diabética', anexo:'pedido_medico.pdf',
+      vendedor:'Carlos Andrade', pedido:'PED-000046', nf:'NF-007813', dataAten:'31/03/2026 12:05' }
 ];
 
 function initDemo() {
@@ -897,7 +914,7 @@ function nextSeq()     { let s = parseInt(localStorage.getItem('log_seq')||'1');
 // ════════════════════════════════════════
 // ESTADO
 // ════════════════════════════════════════
-const fd = { prioridade:'', tipo:'', hospital:'', paciente:'', dataProc:'',
+const fd = { prioridade:'', tipo:'', vendedor:'', hospital:'', paciente:'', dataProc:'',
              horaProc:'', convenio:'', medico:'', materiais:'', observacao:'', anexo:'' };
 let filtroAtual = 'todos';
 let monInterval = null;
@@ -942,11 +959,12 @@ function novaSolicitacao() {
     document.querySelectorAll('#rgPrioridade .radio-card, #rgTipo .radio-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('btnProxP').disabled = true;
     document.getElementById('btnProxT').disabled = true;
-    ['fHospital','fPaciente','fDataProc','fHoraProc','fConvenio','fMedico','fObservacao'].forEach(id => {
+    ['fHospital','fPaciente','fDataProc','fHoraProc','fConvenio','fMedico','fObservacao','fVendedor'].forEach(id => {
         document.getElementById(id).value = '';
     });
     resetMatWidget();
     resetHospWidget();
+    resetVendWidget();
     document.getElementById('fArquivo').value = '';
     document.getElementById('fArquivoNome').textContent = '';
     document.getElementById('btnAnexo').classList.remove('has-file');
@@ -965,15 +983,15 @@ function irStep(step) {
         const grups = ['grpPac','grpData','grpHora','grpConv','grpMed'];
         grups.forEach(g => document.getElementById(g).style.display = rep ? 'none' : 'block');
         if (rep) {
-            document.getElementById('lblHosp').innerHTML = '3. Hospital <span class="req">*</span>';
-            document.getElementById('lblMat').innerHTML  = '4. Materiais solicitados e qtde <span class="req">*</span>';
-            document.getElementById('lblObs').innerHTML  = '5. Observação';
-            document.getElementById('lblAnx').innerHTML  = '6. Anexo – (NÃO OBRIGATÓRIO)';
+            document.getElementById('lblHosp').innerHTML = '4. Hospital <span class="req">*</span>';
+            document.getElementById('lblMat').innerHTML  = '5. Materiais solicitados e qtde <span class="req">*</span>';
+            document.getElementById('lblObs').innerHTML  = '6. Observação';
+            document.getElementById('lblAnx').innerHTML  = '7. Anexo – (NÃO OBRIGATÓRIO)';
         } else {
-            document.getElementById('lblHosp').innerHTML = '3. Hospital <span class="req">*</span>';
-            document.getElementById('lblMat').innerHTML  = '9. Materiais solicitados e qtde <span class="req">*</span>';
-            document.getElementById('lblObs').innerHTML  = '10. Observação';
-            document.getElementById('lblAnx').innerHTML  = '11. Anexo – (NÃO OBRIGATÓRIO)';
+            document.getElementById('lblHosp').innerHTML = '4. Hospital <span class="req">*</span>';
+            document.getElementById('lblMat').innerHTML  = '10. Materiais solicitados e qtde <span class="req">*</span>';
+            document.getElementById('lblObs').innerHTML  = '11. Observação';
+            document.getElementById('lblAnx').innerHTML  = '12. Anexo – (NÃO OBRIGATÓRIO)';
         }
         irPara('telaDetalhes'); setProgress(3);
     }
@@ -1006,6 +1024,8 @@ function onArquivo(e) {
 }
 
 async function enviar() {
+    fd.vendedor  = document.getElementById('fVendedor').value.trim() ||
+                   document.getElementById('fVendNome').value.trim();
     fd.hospital   = document.getElementById('fHospital').value.trim();
     fd.materiais  = document.getElementById('fMateriais').value.trim();
     fd.observacao = document.getElementById('fObservacao').value.trim();
@@ -1022,6 +1042,7 @@ async function enviar() {
     }
     // Validação
     const err = [];
+    if (!fd.vendedor)  err.push('Vendedor');
     if (!fd.hospital)  err.push('Hospital');
     if (!fd.materiais) err.push('Materiais');
     if (!rep) {
@@ -1036,6 +1057,7 @@ async function enviar() {
     loading(true);
     const dados = {
         prioridade: fd.prioridade,    tipo:       fd.tipo,
+        vendedor:   fd.vendedor,
         hospital:   fd.hospital,      paciente:   fd.paciente,
         dataProc:   fd.dataProc  || '-',
         horaProc:   fd.horaProc  || '-',
@@ -1200,6 +1222,7 @@ function abrirDetalhe(id) {
         { l:'Status',     v:sbSt,    html:true },
         { l:'Prioridade', v:`<span class="badge ${bPrior}">${esc(r.prioridade)}</span>`, html:true },
         { l:'Tipo',       v:r.tipo },
+        ...(r.vendedor ? [{ l:'Vendedor', v:r.vendedor }] : []),
         ...(r.paciente !== '-' ? [
             { l:'Paciente',           v:r.paciente },
             { l:'Data do Procedimento',v:r.dataProc + (r.horaProc !== '-' ? ' às ' + r.horaProc : '') },
@@ -1354,6 +1377,66 @@ function loading(show) {
 function setSplashDate() {
     document.getElementById('splashDate').textContent =
         new Date().toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' });
+}
+
+// ── VENDEDOR AUTOCOMPLETE (SA3) ───────────────────────────────────────
+let _vendTimer = null;
+
+function initVendWidget() {
+    const nomeEl = document.getElementById('fVendNome');
+    const dd     = document.getElementById('vendDropdown');
+
+    nomeEl.addEventListener('input', function() {
+        const q = this.value.trim();
+        clearTimeout(_vendTimer);
+        document.getElementById('fVendedor').value = this.value.trim();
+        if (q.length < 2) { dd.style.display = 'none'; return; }
+        _vendTimer = setTimeout(() => buscarVendedores(q), 300);
+    });
+    nomeEl.addEventListener('blur', function() {
+        setTimeout(() => { dd.style.display = 'none'; }, 200);
+        document.getElementById('fVendedor').value = this.value.trim();
+    });
+    nomeEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') dd.style.display = 'none';
+    });
+}
+
+async function buscarVendedores(q) {
+    const dd = document.getElementById('vendDropdown');
+    let hits = [];
+    try {
+        const r = await fetch(
+            REST_URL + '?acao=vendedores&q=' + encodeURIComponent(q),
+            { headers: { 'Authorization': AUTH }, signal: AbortSignal.timeout(5000) }
+        );
+        if (r.ok) {
+            const j = await r.json();
+            if (Array.isArray(j.vendedores)) hits = j.vendedores;
+        }
+    } catch(_) { /* offline */ }
+
+    if (!hits.length) { dd.style.display = 'none'; return; }
+
+    dd.innerHTML = hits.map(v =>
+        '<div class="hosp-dd-item" onmousedown="selecionarVend(event,\'' +
+        v.cod.replace(/'/g,"\\'") + '\',\'' + v.nome.replace(/'/g,"\\'") + '\')">' +
+        '<span>' + esc(v.nome) + '</span></div>'
+    ).join('');
+    dd.style.display = 'block';
+}
+
+function selecionarVend(e, cod, nome) {
+    e.preventDefault();
+    document.getElementById('fVendNome').value  = nome;
+    document.getElementById('fVendedor').value  = nome;
+    document.getElementById('vendDropdown').style.display = 'none';
+}
+
+function resetVendWidget() {
+    document.getElementById('fVendNome').value = '';
+    document.getElementById('fVendedor').value = '';
+    document.getElementById('vendDropdown').style.display = 'none';
 }
 
 // ── HOSPITAL AUTOCOMPLETE ────────────────────────────────────────────
@@ -1656,6 +1739,7 @@ function resetMatWidget() {
     setSplashDate();
     initMatWidget();
     initHospWidget();
+    initVendWidget();
     const p = new URLSearchParams(window.location.search).get('pg');
     if (p === 'monitor') abrirMonitor();
 })();

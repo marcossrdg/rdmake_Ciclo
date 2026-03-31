@@ -61,9 +61,12 @@ WSMETHOD GET WSRECEIVE acao, status, tipo, q WSSERVICE WSLOGISTICA
     ElseIf cAcao == "HOSPITAIS"
         ::SetResponse(fListarHospitais())
         Return .T.
+    ElseIf cAcao == "VENDEDORES"
+        ::SetResponse(fListarVendedores(AllTrim(::q)))
+        Return .T.
     EndIf
 
-    ::SetResponse('{"ok":false,"msg":"Acao invalida. Use: listar, produtos, hospitais"}')
+    ::SetResponse('{"ok":false,"msg":"Acao invalida. Use: listar, produtos, hospitais, vendedores"}')
 Return .T.
 
 //=====================================================================
@@ -137,7 +140,12 @@ Static Function fListarLog(cStatus, cTipo)
     cQry  += "   RTRIM(ZLG_OBS)    AS OBS, "
     cQry  += "   RTRIM(ZLG_ANEXO)  AS ANEXO, "
     cQry  += "   RTRIM(ZLG_DTENVI) AS DTENVI, "
-    cQry  += "   RTRIM(ZLG_HRENVI) AS HRENVI "
+    cQry  += "   RTRIM(ZLG_HRENVI) AS HRENVI, "
+    cQry  += "   RTRIM(ZLG_VEND)   AS VEND, "
+    cQry  += "   RTRIM(ZLG_PEDIDO) AS PEDIDO, "
+    cQry  += "   RTRIM(ZLG_NF)     AS NF, "
+    cQry  += "   RTRIM(ZLG_DTATEN) AS DTATEN, "
+    cQry  += "   RTRIM(ZLG_HRATEN) AS HRATEN "
     cQry  += " FROM ZLG010 WITH (NOLOCK) "
     cQry  += " WHERE D_E_L_E_T_ = ' ' "
 
@@ -170,7 +178,11 @@ Static Function fListarLog(cStatus, cTipo)
         cItem  += '"materiais":"'  + fJStr(AllTrim((cAlias)->MAT))    + '",'
         cItem  += '"observacao":"' + fJStr(AllTrim((cAlias)->OBS))    + '",'
         cItem  += '"anexo":"'      + fJStr(AllTrim((cAlias)->ANEXO))  + '",'
-        cItem  += '"dataEnvio":"'  + fDtBR(AllTrim((cAlias)->DTENVI)) + " " + AllTrim((cAlias)->HRENVI) + '"'
+        cItem  += '"dataEnvio":"'  + fDtBR(AllTrim((cAlias)->DTENVI)) + " " + AllTrim((cAlias)->HRENVI) + '",'
+        cItem  += '"vendedor":"'   + fJStr(AllTrim((cAlias)->VEND))   + '",'
+        cItem  += '"pedido":"'     + fJStr(AllTrim((cAlias)->PEDIDO)) + '",'
+        cItem  += '"nf":"'         + fJStr(AllTrim((cAlias)->NF))     + '",'
+        cItem  += '"dataAten":"'   + iif(!Empty(AllTrim((cAlias)->DTATEN)), fDtBR(AllTrim((cAlias)->DTATEN)) + iif(!Empty(AllTrim((cAlias)->HRATEN)), " " + AllTrim((cAlias)->HRATEN), ""), "") + '"'
         cItem  += "}"
         aAdd(aItens, cItem)
         (cAlias)->(dbSkip())
@@ -268,6 +280,47 @@ Return cJson
 
 
 //=====================================================================
+// fListarVendedores - Retorna JSON com vendedores do SA3
+//=====================================================================
+Static Function fListarVendedores(cQ)
+
+    Local cJson  := ""
+    Local cQry   := ""
+    Local cAlias := GetNextAlias()
+    Local aArea  := GetArea()
+    Local aItens := {}
+    Local cItem  := ""
+    Local cFil   := xFilial("SA3")
+
+    cQry  := " SELECT TOP 30 RTRIM(A3_COD) AS COD, RTRIM(A3_NOME) AS NOME "
+    cQry  += " FROM SA3010 WITH (NOLOCK) "
+    cQry  += " WHERE D_E_L_E_T_ = ' ' "
+    cQry  += " AND A3_FILIAL = '" + cFil + "' "
+    If !Empty(cQ)
+        cQry += " AND UPPER(A3_NOME) LIKE '%" + Upper(fSqlStr(cQ)) + "%' "
+    EndIf
+    cQry  += " ORDER BY A3_NOME "
+
+    dbUseArea(.T., "TOPCONN", TCGenQry(,,cQry), cAlias, .F., .T.)
+
+    While !(cAlias)->(Eof())
+        cItem  := '{"cod":"'  + fJStr(AllTrim((cAlias)->COD))  + '",'
+        cItem  += '"nome":"'  + fJStr(AllTrim((cAlias)->NOME)) + '"}'
+        aAdd(aItens, cItem)
+        (cAlias)->(dbSkip())
+    EndDo
+
+    (cAlias)->(dbCloseArea())
+    RestArea(aArea)
+
+    cJson  := '{"ok":true,"total":' + cValToChar(Len(aItens)) + ',"vendedores":['
+    cJson  += aStrJoin(aItens, ",")
+    cJson  += ']}'
+
+Return cJson
+
+
+//=====================================================================
 // fIncluirLog - INSERT em ZLG010
 //=====================================================================
 Static Function fIncluirLog(oJson)
@@ -285,6 +338,7 @@ Static Function fIncluirLog(oJson)
     Local cMat    := ""
     Local cObs    := ""
     Local cAnexo  := ""
+    Local cVend   := ""
     Local nRet    := 0
     Local cSql    := ""
 
@@ -300,6 +354,7 @@ Static Function fIncluirLog(oJson)
     cMat    := Left(jStr(oJson,"materiais"), 250)
     cObs    := Left(jStr(oJson,"observacao"),250)
     cAnexo  := Left(jStr(oJson,"anexo"),    200)
+    cVend   := Left(jStr(oJson,"vendedor"),  80)
 
     // Validacoes
     If Empty(cHosp)
@@ -309,6 +364,10 @@ Static Function fIncluirLog(oJson)
     If Empty(cMat)
         RestArea(aArea)
         Return '{"ok":false,"msg":"Campo materiais obrigatorio"}'
+    EndIf
+    If Empty(cVend)
+        RestArea(aArea)
+        Return '{"ok":false,"msg":"Campo vendedor obrigatorio"}'
     EndIf
     If Empty(cPrior)
         RestArea(aArea)
@@ -327,7 +386,7 @@ Static Function fIncluirLog(oJson)
     cSql  += "  D_E_L_E_T_,ZLG_ID,ZLG_PRIOR,ZLG_TIPO,ZLG_STATUS,"
     cSql  += "  ZLG_HOSP,ZLG_PAC,ZLG_DTPROC,ZLG_HRPROC,"
     cSql  += "  ZLG_CONV,ZLG_MED,ZLG_MAT,ZLG_OBS,ZLG_ANEXO,"
-    cSql  += "  ZLG_DTENVI,ZLG_HRENVI"
+    cSql  += "  ZLG_DTENVI,ZLG_HRENVI,ZLG_VEND"
     cSql  += ") VALUES ("
     cSql  += "  ' ',"
     cSql  += "  '" + fSqlStr(cId)    + "',"
@@ -344,7 +403,8 @@ Static Function fIncluirLog(oJson)
     cSql  += "  '" + fSqlStr(cObs)   + "',"
     cSql  += "  '" + fSqlStr(cAnexo) + "',"
     cSql  += "  '" + DToS(Date())    + "',"
-    cSql  += "  '" + Left(Time(),5)  + "'"
+    cSql  += "  '" + Left(Time(),5)  + "',"
+    cSql  += "  '" + fSqlStr(cVend)  + "'"
     cSql  += ")"
 
     nRet := TcSqlExec(cSql)
@@ -369,6 +429,8 @@ Static Function fAtualizarLog(oJson)
     Local aArea   := GetArea()
     Local cId     := AllTrim(jStr(oJson,"id"))
     Local cStatus := Upper(AllTrim(jStr(oJson,"status")))
+    Local cPedido := Left(jStr(oJson,"pedido"), 20)
+    Local cNF     := Left(jStr(oJson,"nf"), 20)
     Local nRet    := 0
 
     If Empty(cId)
@@ -379,10 +441,30 @@ Static Function fAtualizarLog(oJson)
         RestArea(aArea)
         Return '{"ok":false,"msg":"Status invalido. Use: P=Pendente ou A=Atendido"}'
     EndIf
+    If cStatus == "A" .And. Empty(cPedido)
+        RestArea(aArea)
+        Return '{"ok":false,"msg":"Numero do pedido obrigatorio ao atender"}'
+    EndIf
+    If cStatus == "A" .And. Empty(cNF)
+        RestArea(aArea)
+        Return '{"ok":false,"msg":"Numero da NF obrigatoria ao atender"}'
+    EndIf
 
-    nRet := TcSqlExec( ;
-        "UPDATE ZLG010 SET ZLG_STATUS = '" + cStatus + "' " + ;
-        "WHERE D_E_L_E_T_ = ' ' AND ZLG_ID = '" + fSqlStr(cId) + "'" )
+    If cStatus == "A"
+        nRet := TcSqlExec( ;
+            "UPDATE ZLG010 SET ZLG_STATUS = 'A'," + ;
+            " ZLG_PEDIDO = '" + fSqlStr(cPedido) + "'," + ;
+            " ZLG_NF = '"     + fSqlStr(cNF)     + "'," + ;
+            " ZLG_DTATEN = '" + DToS(Date())     + "'," + ;
+            " ZLG_HRATEN = '" + Left(Time(),5)   + "'" + ;
+            " WHERE D_E_L_E_T_ = ' ' AND ZLG_ID = '" + fSqlStr(cId) + "'" )
+    Else
+        nRet := TcSqlExec( ;
+            "UPDATE ZLG010 SET ZLG_STATUS = 'P'," + ;
+            " ZLG_PEDIDO = '', ZLG_NF = ''," + ;
+            " ZLG_DTATEN = '        ', ZLG_HRATEN = '     '" + ;
+            " WHERE D_E_L_E_T_ = ' ' AND ZLG_ID = '" + fSqlStr(cId) + "'" )
+    EndIf
 
     If nRet < 0
         ConOut("[WSLOGISTICA] Erro UPDATE: " + TcSqlError())
