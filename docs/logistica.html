@@ -1315,6 +1315,13 @@ async function setStatus(s, pedido, nf) {
     const data = getData();
     const idx  = data.findIndex(x => x.id === detId);
     if (idx === -1) return;
+    const vend = data[idx].vendedor || '';
+    // Guarda estado anterior para rollback
+    const prevStatus   = data[idx].status;
+    const prevPedido   = data[idx].pedido   || '';
+    const prevNf       = data[idx].nf       || '';
+    const prevDataAten = data[idx].dataAten || '';
+    // Atualiza otimisticamente
     data[idx].status = s;
     if (s === 'A') {
         data[idx].pedido   = pedido || '';
@@ -1328,11 +1335,29 @@ async function setStatus(s, pedido, nf) {
     saveData(data);
     fecharModal();
     renderMonitor();
+    // Sincroniza com Protheus
     try {
-        await apiAtualizar(detId, s, pedido, nf, data[idx].vendedor || '');
+        const res = await apiAtualizar(detId, s, pedido, nf, vend);
+        if (!res.ok) {
+            // Servidor rejeitou — reverte o otimístico e mostra erro
+            const d2 = getData();
+            const i2 = d2.findIndex(x => x.id === detId);
+            if (i2 !== -1) {
+                d2[i2].status   = prevStatus;
+                d2[i2].pedido   = prevPedido;
+                d2[i2].nf       = prevNf;
+                d2[i2].dataAten = prevDataAten;
+                saveData(d2);
+                renderMonitor();
+            }
+            toast('Erro no servidor: ' + (res.msg || 'tente novamente'), 'error');
+            return;
+        }
+        // Sucesso — recarrega do servidor
         await apiCarregar();
         renderMonitor();
     } catch(e) {
+        // Offline — mantém o otimístico (não reverte)
         console.warn('[WSLOGISTICA]', e.message);
     }
 }
