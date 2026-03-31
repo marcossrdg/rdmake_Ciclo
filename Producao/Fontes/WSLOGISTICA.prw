@@ -47,6 +47,11 @@ WSMETHOD GET WSRECEIVE acao, status, tipo, q WSSERVICE WSLOGISTICA
 
     ::SetContentType("application/json")
 
+    // Headers CORS
+    ::SetHeader("Access-Control-Allow-Origin",  "*")
+    ::SetHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    ::SetHeader("Access-Control-Allow-Headers", "Authorization, Content-Type")
+
     If cAcao == "LISTAR" .Or. Empty(cAcao)
         ::SetResponse(fListarLog(cStatus, cTipo))
         Return .T.
@@ -78,6 +83,11 @@ WSMETHOD POST WSRECEIVE WSSERVICE WSLOGISTICA
     Local cResp  := ""
 
     ::SetContentType("application/json")
+
+    // Headers CORS
+    ::SetHeader("Access-Control-Allow-Origin",  "*")
+    ::SetHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    ::SetHeader("Access-Control-Allow-Headers", "Authorization, Content-Type")
 
     cError := oJson:FromJson(cBody)
     If !Empty(cError)
