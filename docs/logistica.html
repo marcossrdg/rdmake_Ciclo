@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1b7a3d">
+    <title>CicloMed - Logística</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231b7a3d'/%3E%3Cpath d='M30 28 A30 30 0 1 1 20 50' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Ctext x='50' y='55' font-size='18' text-anchor='middle' fill='white' font-family='Arial' font-style='italic'%3ECM%3C/text%3E%3C/svg%3E">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary:       #1b7a3d;
+            --primary-dark:  #145c2e;
+            --primary-light: #e8f5ec;
+            --success:       #16a34a;
+            --danger:        #dc2626;
+            --warn-bg:       #fef9c3;
+            --warn-border:   #ca8a04;
+            --warn-text:     #854d0e;
+            --ok-bg:         #dcfce7;
+            --ok-border:     #16a34a;
+            --ok-text:       #166534;
+            --gray-50:  #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+            --shadow:    0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,.10), 0 2px 4px -1px rgba(0,0,0,.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.10), 0 4px 6px -2px rgba(0,0,0,.05);
+            --radius:    16px;
+            --radius-sm: 10px;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── TELAS ─────────────────────────────── */
+        .tela { display: none; }
+        .tela.ativa { display: block; animation: fadeIn .28s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+        /* ── SPLASH ─────────────────────────────── */
+        .splash-wrap {
+            min-height: 100vh;
+            background: #edf0ec;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 28px 20px;
+        }
+        .splash-card {
+            background: linear-gradient(160deg, #1b7a3d 0%, #0f4f27 100%);
+            color: white;
+            border-radius: 24px;
+            padding: 44px 36px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 24px 64px rgba(15,79,39,.35);
+            position: relative;
+            overflow: hidden;
+        }
+        .splash-card::before {
+            content: '';
+            position: absolute; top: -60px; right: -60px;
+            width: 220px; height: 220px;
+            background: rgba(255,255,255,.05);
+            border-radius: 50%;
+        }
+        .splash-card::after {
+            content: '';
+            position: absolute; bottom:-90px; left:-40px;
+            width: 260px; height: 260px;
+            background: rgba(255,255,255,.04);
+            border-radius: 50%;
+        }
+        .splash-date  { font-size:14px; font-weight:700; color:rgba(255,255,255,.65); margin-bottom:20px; }
+        .splash-title { font-size:30px; font-weight:900; line-height:1.15; margin-bottom:28px; letter-spacing:-.4px; }
+        .splash-desc  { font-size:14px; color:rgba(255,255,255,.8); line-height:1.7; margin-bottom:36px; }
+        .splash-desc a { color:rgba(255,255,255,.85); font-weight:600; }
+        .splash-footer { display:flex; justify-content:flex-end; }
+        .btn-iniciar {
+            background: white; color: var(--primary-dark);
+            border: none; border-radius: 12px;
+            padding: 14px 30px; font-size: 15px; font-weight: 700;
+            cursor: pointer; transition: all .15s;
+            box-shadow: 0 4px 16px rgba(0,0,0,.18);
+        }
+        .btn-iniciar:active { transform:scale(.97); box-shadow:0 2px 8px rgba(0,0,0,.18); }
+        .splash-monitor {
+            margin-top: 22px;
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+        .splash-monitor a { color:var(--primary); font-weight:700; text-decoration:none; }
+        .splash-monitor a:hover { text-decoration:underline; }
+
+        /* ── FORM HEADER / PROGRESSO ─────────────── */
+        #formHeader {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 16px 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: none;
+        }
+        .fh-top {
+            display: flex; align-items: center; justify-content: space-between;
+            color: white; margin-bottom: 14px;
+        }
+        .fh-logo { display:flex; align-items:center; gap:10px; }
+        .fh-logo span { font-size:16px; font-weight:700; }
+        .fh-step { font-size:12px; color:rgba(255,255,255,.65); font-weight:600; }
+        .progress-track { height:4px; background:rgba(255,255,255,.2); border-radius:2px; overflow:hidden; }
+        .progress-fill  { height:100%; background:white; border-radius:2px; transition:width .4s cubic-bezier(.4,0,.2,1); }
+
+        /* ── FORM CONTENT ────────────────────────── */
+        .form-content { padding:28px 20px 60px; max-width:520px; margin:0 auto; }
+        .step-section  { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gray-500); margin-bottom:8px; }
+        .step-question { font-size:20px; font-weight:700; color:var(--gray-900); margin-bottom:24px; line-height:1.3; }
+        .step-nav { display:flex; gap:12px; margin-top:8px; }
+        .step-nav .btn { flex:1; }
+
+        /* ── RADIO CARDS ──────────────────────────── */
+        .radio-group { display:flex; flex-direction:column; gap:12px; margin-bottom:32px; }
+        .radio-card {
+            display:flex; align-items:center; gap:16px;
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 16px 20px;
+            cursor: pointer; transition: all .15s;
+            font-size: 15px; font-weight: 600; color: var(--gray-700);
+            user-select: none;
+        }
+        .radio-card:active { background:var(--gray-50); }
+        .radio-card.selected { border-color:var(--primary); background:var(--primary-light); color:var(--primary-dark); }
+        .radio-indicator {
+            width:22px; height:22px; border-radius:50%;
+            border:2px solid var(--gray-300); flex-shrink:0;
+            transition: all .15s; position:relative;
+        }
+        .radio-card.selected .radio-indicator { border-color:var(--primary); background:var(--primary); }
+        .radio-card.selected .radio-indicator::after {
+            content:''; position:absolute; top:50%; left:50%;
+            transform:translate(-50%,-50%);
+            width:8px; height:8px; background:white; border-radius:50%;
+        }
+        /* Urgente fica vermelho */
+        .rc-urgente.selected { border-color:#dc2626; background:#fef2f2; color:#991b1b; }
+        .rc-urgente.selected .radio-indicator { border-color:#dc2626; background:#dc2626; }
+
+        /* ── BOTÕES ──────────────────────────────── */
+        .btn {
+            display:inline-flex; align-items:center; justify-content:center; gap:8px;
+            padding:15px 24px; border:none; border-radius:var(--radius-sm);
+            font-size:15px; font-weight:700; cursor:pointer;
+            transition:all .15s; letter-spacing:-.2px;
+            font-family: inherit;
+        }
+        .btn:active { transform:scale(.98); }
+        .btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-primary:not(:disabled):active { background:var(--primary-dark); }
+        .btn-success { background:var(--success); color:white; }
+        .btn-success:active { background:#15803d; }
+        .btn-outline { background:white; color:var(--gray-700); border:2px solid var(--gray-200); }
+        .btn-outline:active { background:var(--gray-50); }
+
+        /* ── FORM GROUPS ─────────────────────────── */
+        .form-group { margin-bottom:20px; }
+        .form-group label {
+            display:block; font-size:11px; font-weight:700;
+            color:var(--gray-500); margin-bottom:6px;
+            text-transform:uppercase; letter-spacing:.5px;
+        }
+        .form-group label .req { color:var(--danger); margin-left:2px; }
+        .form-group input,
+        .form-group textarea {
+            width:100%; padding:14px 16px;
+            border:2px solid var(--gray-200); border-radius:var(--radius-sm);
+            font-size:16px; background:white;
+            transition:border-color .2s, box-shadow .2s;
+            color:var(--gray-900); -webkit-appearance:none; font-family:inherit;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline:none; border-color:var(--primary);
+            box-shadow:0 0 0 3px rgba(27,122,61,.1);
+        }
+        .form-group textarea { resize:vertical; min-height:88px; }
+
+        /* ── UPLOAD ARQUIVO ──────────────────────── */
+        .file-btn {
+            display:flex; align-items:center; gap:10px; width:100%;
+            padding:14px 16px; border:2px dashed var(--gray-300);
+            border-radius:var(--radius-sm); background:white;
+            color:var(--gray-500); font-size:14px; font-weight:600;
+            cursor:pointer; transition:all .2s; font-family:inherit;
+        }
+        .file-btn:active { border-color:var(--primary); background:var(--primary-light); }
+        .file-btn.has-file { border-color:var(--success); color:var(--success); background:var(--ok-bg); border-style:solid; }
+        .file-name { font-size:12px; color:var(--gray-400); margin-top:6px; padding-left:4px; }
+
+        /* ── TELA SUCESSO ────────────────────────── */
+        .success-wrap {
+            min-height: 100vh; display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            padding:32px 24px; background:var(--gray-50); text-align:center;
+        }
+        .success-icon {
+            width:96px; height:96px; background:var(--primary-light);
+            border-radius:50%; display:flex; align-items:center; justify-content:center;
+            margin:0 auto 24px;
+        }
+        .success-title { font-size:24px; font-weight:800; margin-bottom:10px; }
+        .success-desc  { font-size:15px; color:var(--gray-500); margin-bottom:10px; line-height:1.6; }
+        .success-proto {
+            display:inline-block; background:var(--primary-light);
+            color:var(--primary-dark); font-weight:800; font-size:20px;
+            padding:8px 28px; border-radius:12px; margin-bottom:32px;
+        }
+        .success-actions { display:flex; flex-direction:column; gap:12px; width:100%; max-width:300px; }
+        .link-monitor {
+            background:none; border:none; color:var(--gray-400);
+            font-size:13px; font-weight:600; cursor:pointer;
+            text-decoration:underline; font-family:inherit; padding:8px;
+        }
+
+        /* ── MONITOR HEADER ──────────────────────── */
+        .mon-hdr {
+            background:linear-gradient(135deg,#1b3d5c 0%,#0f2336 100%);
+            color:white; padding:16px 20px;
+            position:sticky; top:0; z-index:100;
+        }
+        .mon-hdr-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+        .mon-logo   { display:flex; align-items:center; gap:12px; }
+        .mon-logo-txt span    { display:block; font-size:17px; font-weight:700; }
+        .mon-logo-txt small   { display:block; font-size:11px; color:rgba(255,255,255,.55); font-weight:500; margin-top:1px; }
+        .mon-hdr-btns { display:flex; gap:8px; }
+        .btn-icon-ghost {
+            height:36px; padding:0 14px;
+            background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
+            border-radius:10px; color:white; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; gap:6px;
+            font-size:12px; font-weight:600; transition:background .2s;
+        }
+        .btn-icon-ghost:active { background:rgba(255,255,255,.25); }
+        .btn-icon-ghost.square { width:36px; padding:0; }
+        .btn-icon-ghost.spinning svg { animation:spin .8s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* STATS BAR */
+        .stats-bar {
+            display:flex; background:rgba(255,255,255,.08);
+            border-radius:12px; overflow:hidden;
+        }
+        .stat {
+            flex:1; text-align:center; padding:10px 4px;
+            cursor:pointer; transition:background .15s;
+        }
+        .stat:not(:last-child) { border-right:1px solid rgba(255,255,255,.1); }
+        .stat.active  { background:rgba(255,255,255,.15); }
+        .stat-val     { font-size:24px; font-weight:800; line-height:1; }
+        .stat-lbl     { font-size:10px; color:rgba(255,255,255,.6); font-weight:600; margin-top:3px; text-transform:uppercase; letter-spacing:.5px; }
+        .stat.s-pend .stat-val { color:#fbbf24; }
+        .stat.s-ok   .stat-val { color:#4ade80; }
+
+        /* FILTER TABS */
+        .filter-tabs {
+            display:flex; gap:8px; padding:14px 20px 6px;
+            overflow-x:auto; scrollbar-width:none;
+        }
+        .filter-tabs::-webkit-scrollbar { display:none; }
+        .ftab {
+            white-space:nowrap; padding:6px 16px;
+            border-radius:20px; font-size:13px; font-weight:600;
+            cursor:pointer; border:2px solid var(--gray-200);
+            background:white; color:var(--gray-600); transition:all .15s;
+            font-family:inherit;
+        }
+        .ftab.active        { background:var(--gray-900);  color:white; border-color:var(--gray-900); }
+        .ftab.active.fp     { background:#92400e; border-color:#92400e; }
+        .ftab.active.fa     { background:#166534; border-color:#166534; }
+        .ftab.active.fu     { background:#991b1b; border-color:#991b1b; }
+
+        /* REQUEST CARDS */
+        .mon-list { padding:0 16px 100px; }
+        .req-card {
+            background:white; border-radius:16px; margin-bottom:10px;
+            box-shadow:var(--shadow-sm); border:1px solid var(--gray-100);
+            border-left:5px solid var(--gray-300);
+            cursor:pointer; transition:all .15s; overflow:hidden;
+        }
+        .req-card:active { transform:scale(.99); }
+        .req-card.pend { border-left-color:var(--warn-border); }
+        .req-card.ok   { border-left-color:var(--ok-border); }
+        .req-inner { padding:14px 16px; }
+        .req-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:8px; }
+        .req-hospital  { font-size:15px; font-weight:700; color:var(--gray-900); flex:1; line-height:1.3; }
+        .req-protocol  { font-size:11px; color:var(--gray-400); font-weight:600; white-space:nowrap; }
+        .req-badges    { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+        .badge {
+            display:inline-flex; align-items:center;
+            padding:3px 10px; border-radius:20px;
+            font-size:11px; font-weight:700; letter-spacing:.2px;
+        }
+        .b-urg  { background:#fee2e2; color:#991b1b; }
+        .b-med  { background:#fef3c7; color:#92400e; }
+        .b-baix { background:#dbeafe; color:#1e40af; }
+        .b-tipo { background:var(--gray-100); color:var(--gray-600); }
+        .b-pend { background:var(--warn-bg); color:var(--warn-text); }
+        .b-ok   { background:var(--ok-bg);   color:var(--ok-text); }
+        .req-paciente  { font-size:13px; color:var(--gray-600); margin-top:4px; display:flex; align-items:center; gap:6px; }
+        .req-date      { font-size:12px; color:var(--gray-500); margin-top:4px; display:flex; align-items:center; gap:4px; }
+        .req-mats      { font-size:12px; color:var(--gray-500); margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .req-footer    { font-size:11px; color:var(--gray-400); margin-top:8px; text-align:right; }
+
+        /* EMPTY */
+        .empty-state { text-align:center; padding:64px 24px; color:var(--gray-400); }
+        .empty-icon  { font-size:52px; margin-bottom:16px; }
+        .empty-state p     { font-size:15px; font-weight:600; color:var(--gray-500); margin-bottom:4px; }
+        .empty-state small { font-size:13px; }
+
+        /* LAST UPDATE */
+        .last-upd { text-align:center; font-size:11px; color:var(--gray-400); padding:8px 0 24px; font-weight:500; }
+
+        /* ── MODAL DETALHE ───────────────────────── */
+        .modal-overlay {
+            display:none; position:fixed; inset:0;
+            background:rgba(0,0,0,.5); backdrop-filter:blur(4px);
+            z-index:500; align-items:flex-end; justify-content:center;
+        }
+        .modal-overlay.show { display:flex; }
+        .modal-sheet {
+            background:white; border-radius:24px 24px 0 0;
+            width:100%; max-width:520px; max-height:85vh;
+            overflow-y:auto; padding:20px 20px 48px;
+            animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+        .modal-handle { width:36px; height:4px; background:var(--gray-200); border-radius:4px; margin:0 auto 20px; }
+        .md-protocol  { font-size:12px; font-weight:700; color:var(--gray-400); margin-bottom:4px; letter-spacing:.4px; }
+        .md-hospital  { font-size:20px; font-weight:800; color:var(--gray-900); margin-bottom:14px; line-height:1.2; }
+        .md-field      { display:flex; flex-direction:column; gap:2px; padding:10px 0; border-bottom:1px solid var(--gray-100); }
+        .md-field:last-of-type { border-bottom:none; }
+        .md-field-lbl  { font-size:11px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:.5px; }
+        .md-field-val  { font-size:14px; color:var(--gray-800); font-weight:500; line-height:1.5; }
+        .md-actions    { margin-top:20px; display:flex; flex-direction:column; gap:10px; }
+
+        /* ── LOADING / TOAST ─────────────────────── */
+        .loading-overlay {
+            display:none; position:fixed; inset:0;
+            background:rgba(0,0,0,.4); backdrop-filter:blur(4px);
+            z-index:999; align-items:center; justify-content:center;
+        }
+        .loading-overlay.show { display:flex; }
+        .spinner {
+            width:44px; height:44px;
+            border:3px solid rgba(255,255,255,.2); border-top-color:white;
+            border-radius:50%; animation:spin .7s linear infinite;
+        }
+        .toast {
+            position:fixed; bottom:32px; left:50%;
+            transform:translateX(-50%) translateY(100px);
+            background:var(--gray-900); color:white;
+            padding:14px 24px; border-radius:14px;
+            font-size:14px; font-weight:600; z-index:1000;
+            transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+            max-width:90%; text-align:center;
+            box-shadow:var(--shadow-lg); white-space:nowrap;
+        }
+        .toast.show    { transform:translateX(-50%) translateY(0); }
+        .toast.error   { background:var(--danger); }
+        .toast.success { background:var(--success); }
+
+        @media (min-width:600px) {
+            .form-content { padding:32px 24px 80px; }
+            .mon-list { padding:0 24px 100px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading"><div class="spinner"></div></div>
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     TELA 0 — SPLASH / INÍCIO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="tela ativa" id="telaInicio">
+    <div class="splash-wrap">
+        <div class="splash-card">
+            <div class="splash-date" id="splashDate"></div>
+            <div class="splash-title">LOGÍSTICA<br>CICLOMED DO BRASIL</div>
+            <div class="splash-desc">
+                Olá, seja bem vindo ao portal de solicitações de pedidos.<br>
+                Caso o assunto a ser tratado seja diferente de solicitação de pedidos,
+                por favor entre em contato no e-mail abaixo.<br>
+                <a href="mailto:logistica@ciclomed.com.br">logistica@ciclomed.com.br</a>
+            </div>
+            <div class="splash-footer">
+                <button class="btn-iniciar" onclick="iniciarFormulario()">Iniciar agora</button>
+            </div>
+        </div>
+        <div class="splash-monitor">
+            <a href="#" onclick="abrirMonitor();return false;">🖥️ Acesso Monitor — Logística</a>
+        </div>
+    </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     CABEÇALHO DE FORMULÁRIO (fixo nos passos 1-3)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="formHeader">
+    <div class="fh-top">
+        <div class="fh-logo">
+            <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" fill="rgba(255,255,255,.2)"/>
+                <path d="M30 28 A30 30 0 1 1 20 50" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <text x="50" y="54" font-size="20" text-anchor="middle" fill="white" font-family="Arial" font-style="italic">CM</text>
+            </svg>
+            <span>Logística</span>
+        </div>
+        <span class="fh-step" id="stepCounter">Passo 1 de 3</span>
+    </div>
+    <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:33%"></div>
+    </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     TELA 1 — PRIORIDADE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="tela" id="telaPrioridade">
+    <div class="form-content">
+        <p class="step-section">PRIORIDADE DA SOLICITAÇÃO</p>
+        <h2 class="step-question">1. Por favor, selecione a prioridade do pedido <span style="color:var(--danger)">*</span></h2>
+        <div class="radio-group" id="rgPrioridade">
+            <div class="radio-card rc-urgente" onclick="selectOpt('prioridade','URGENTE',this,'rgPrioridade')">
+                <div class="radio-indicator"></div>
+                <span>URGENTE</span>
+            </div>
+            <div class="radio-card" onclick="selectOpt('prioridade','MÉDIA',this,'rgPrioridade')">
+                <div class="radio-indicator"></div>
+                <span>MÉDIA</span>
+            </div>
+            <div class="radio-card" onclick="selectOpt('prioridade','BAIXA',this,'rgPrioridade')">
+                <div class="radio-indicator"></div>
+                <span>BAIXA</span>
+            </div>
+        </div>
+        <div class="step-nav">
+            <button class="btn btn-primary" id="btnProxP" onclick="irStep(2)" disabled>Avançar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     TELA 2 — TIPO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="tela" id="telaTipo">
+    <div class="form-content">
+        <h2 class="step-question">2. Tipo de solicitação <span style="color:var(--danger)">*</span></h2>
+        <div class="radio-group" id="rgTipo">
+            <div class="radio-card" onclick="selectOpt('tipo','ELETIVO',this,'rgTipo')">
+                <div class="radio-indicator"></div>
+                <span>ELETIVO</span>
+            </div>
+            <div class="radio-card" onclick="selectOpt('tipo','RESERVA',this,'rgTipo')">
+                <div class="radio-indicator"></div>
+                <span>RESERVA</span>
+            </div>
+            <div class="radio-card" onclick="selectOpt('tipo','REPOSIÇÃO',this,'rgTipo')">
+                <div class="radio-indicator"></div>
+                <span>REPOSIÇÃO</span>
+            </div>
+        </div>
+        <div class="step-nav">
+            <button class="btn btn-outline" onclick="irStep(1)">Voltar</button>
+            <button class="btn btn-primary" id="btnProxT" onclick="irStep(3)" disabled>Avançar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     TELA 3 — DETALHES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="tela" id="telaDetalhes">
+    <div class="form-content">
+        <h2 class="step-question" id="detTitulo" style="color:var(--primary); font-size:22px; margin-bottom:20px;"></h2>
+
+        <!-- Hospital -->
+        <div class="form-group">
+            <label id="lblHosp">3. Hospital <span class="req">*</span></label>
+            <input type="text" id="fHospital" placeholder="Nome do hospital">
+        </div>
+
+        <!-- Paciente (hidden for REPOSIÇÃO) -->
+        <div class="form-group" id="grpPac">
+            <label>4. Nome do paciente <span class="req">*</span></label>
+            <input type="text" id="fPaciente" placeholder="Nome completo">
+        </div>
+
+        <!-- Data procedimento (hidden for REPOSIÇÃO) -->
+        <div class="form-group" id="grpData">
+            <label>5. Data do procedimento <span class="req">*</span></label>
+            <input type="date" id="fDataProc">
+        </div>
+
+        <!-- Hora procedimento (hidden for REPOSIÇÃO) -->
+        <div class="form-group" id="grpHora">
+            <label>6. Hora do procedimento <span class="req">*</span></label>
+            <input type="time" id="fHoraProc">
+        </div>
+
+        <!-- Convênio (hidden for REPOSIÇÃO) -->
+        <div class="form-group" id="grpConv">
+            <label>7. Convênio <span class="req">*</span></label>
+            <input type="text" id="fConvenio" placeholder="Nome do convênio ou particular">
+        </div>
+
+        <!-- Médico (hidden for REPOSIÇÃO) -->
+        <div class="form-group" id="grpMed">
+            <label>8. Médico <span class="req">*</span></label>
+            <input type="text" id="fMedico" placeholder="Nome do médico responsável">
+        </div>
+
+        <!-- Materiais -->
+        <div class="form-group">
+            <label id="lblMat">9. Materiais solicitados e qtde <span class="req">*</span></label>
+            <textarea id="fMateriais" placeholder="Ex: G-NB2-50_0 x 2, MCFL2,7X150R x 1"></textarea>
+        </div>
+
+        <!-- Observação -->
+        <div class="form-group">
+            <label id="lblObs">10. Observação</label>
+            <textarea id="fObservacao" placeholder="Informações adicionais (opcional)"></textarea>
+        </div>
+
+        <!-- Anexo -->
+        <div class="form-group">
+            <label id="lblAnx">11. Anexo – (NÃO OBRIGATÓRIO)</label>
+            <button type="button" class="file-btn" id="btnAnexo" onclick="document.getElementById('fArquivo').click()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                Carregar arquivo
+            </button>
+            <input type="file" id="fArquivo" style="display:none"
+                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.mp4,.mp3"
+                   onchange="onArquivo(event)">
+            <div class="file-name" id="fArquivoNome"></div>
+        </div>
+
+        <div class="step-nav">
+            <button class="btn btn-outline" onclick="irStep(2)">Voltar</button>
+            <button class="btn btn-primary" onclick="enviar()">Enviar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     TELA ENVIADO — SUCESSO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="tela" id="telaEnviado">
+    <div class="success-wrap">
+        <div class="success-icon">
+            <svg width="52" height="52" fill="none" stroke="var(--primary)" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        <h2 class="success-title">Solicitação enviada!</h2>
+        <p class="success-desc">Sua solicitação foi registrada com sucesso.<br>A equipe de logística foi notificada.</p>
+        <div class="success-proto" id="protocoloEnviado">LOG-0001</div>
+        <div class="success-actions">
+            <button class="btn btn-primary" onclick="novaSolicitacao()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                Nova Solicitação
+            </button>
+            <button class="link-monitor" onclick="abrirMonitor()">🖥️ Ver Monitor de Solicitações</button>
+        </div>
+    </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     TELA MONITOR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="tela" id="telaMonitor">
+
+    <!-- Cabeçalho Monitor -->
+    <div class="mon-hdr">
+        <div class="mon-hdr-top">
+            <div class="mon-logo">
+                <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="45" fill="rgba(255,255,255,.15)"/>
+                    <path d="M30 28 A30 30 0 1 1 20 50" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    <text x="50" y="54" font-size="20" text-anchor="middle" fill="white" font-family="Arial" font-style="italic">CM</text>
+                </svg>
+                <div class="mon-logo-txt">
+                    <span>Logística CicloMed</span>
+                    <small>Monitor de Solicitações</small>
+                </div>
+            </div>
+            <div class="mon-hdr-btns">
+                <button class="btn-icon-ghost" onclick="irParaSplash()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    Nova
+                </button>
+                <button class="btn-icon-ghost square" id="btnRefresh" onclick="refreshMonitor()" title="Atualizar">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat active" id="stTodos"    onclick="filtrar('todos')">
+                <div class="stat-val" id="svTotal">0</div>
+                <div class="stat-lbl">Total</div>
+            </div>
+            <div class="stat s-pend" id="stPend"  onclick="filtrar('pendentes')">
+                <div class="stat-val" id="svPend">0</div>
+                <div class="stat-lbl">Pendentes</div>
+            </div>
+            <div class="stat s-ok"   id="stOk"    onclick="filtrar('atendidos')">
+                <div class="stat-val" id="svOk">0</div>
+                <div class="stat-lbl">Atendidos</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <button class="ftab active"   data-f="todos"      onclick="filtrar('todos')">Todos</button>
+        <button class="ftab fp"       data-f="pendentes"  onclick="filtrar('pendentes')">⚠️ Pendentes</button>
+        <button class="ftab fa"       data-f="atendidos"  onclick="filtrar('atendidos')">✓ Atendidos</button>
+        <button class="ftab fu"       data-f="urgentes"   onclick="filtrar('urgentes')">🚨 Urgentes</button>
+        <button class="ftab"          data-f="eletivos"   onclick="filtrar('eletivos')">ELETIVO</button>
+        <button class="ftab"          data-f="reservas"   onclick="filtrar('reservas')">RESERVA</button>
+        <button class="ftab"          data-f="reposicoes" onclick="filtrar('reposicoes')">REPOSIÇÃO</button>
+    </div>
+
+    <!-- Cards -->
+    <div class="mon-list" id="monList"></div>
+    <div class="last-upd" id="lastUpd"></div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     MODAL — DETALHE DA SOLICITAÇÃO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="modal-overlay" id="modalDet" onclick="fecharModal(event)">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="md-protocol"  id="mdProto"></div>
+        <div class="md-hospital"  id="mdHosp"></div>
+        <div id="mdFields"></div>
+        <div class="md-actions"   id="mdActs"></div>
+    </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// DADOS DEMO (inicializa localStorage)
+// ════════════════════════════════════════
+const DEMO = [
+    { id:'D1', protocol:'LOG-0001', status:'P', dataEnvio:'31/03/2026 07:45',
+      prioridade:'URGENTE', tipo:'ELETIVO', hospital:'Hospital Sírio-Libanês',
+      paciente:'João Carlos Silva', dataProc:'31/03/2026', horaProc:'10:30',
+      convenio:'Bradesco Saúde', medico:'Dr. Carlos Menezes',
+      materiais:'G-NB2-50_0 x 2, MCFL2,7X150R x 1', observacao:'Cirurgia de emergência', anexo:'' },
+    { id:'D2', protocol:'LOG-0002', status:'A', dataEnvio:'31/03/2026 08:10',
+      prioridade:'MÉDIA', tipo:'RESERVA', hospital:'Hospital Albert Einstein',
+      paciente:'Maria Santos Oliveira', dataProc:'01/04/2026', horaProc:'14:00',
+      convenio:'Unimed', medico:'Dra. Ana Paula Souza',
+      materiais:'MCFL2,9X150A x 1', observacao:'', anexo:'' },
+    { id:'D3', protocol:'LOG-0003', status:'P', dataEnvio:'31/03/2026 09:30',
+      prioridade:'URGENTE', tipo:'REPOSIÇÃO', hospital:'Hospital das Clínicas – SP',
+      paciente:'-', dataProc:'-', horaProc:'-', convenio:'-', medico:'-',
+      materiais:'G-NB2-50_0 x 5, MCFL2,7X150R x 3, MCFL2,9X150A x 2',
+      observacao:'Reposição urgente – CC', anexo:'' },
+    { id:'D4', protocol:'LOG-0004', status:'P', dataEnvio:'31/03/2026 10:15',
+      prioridade:'BAIXA', tipo:'ELETIVO', hospital:'Hospital Santa Catarina',
+      paciente:'Pedro Henrique Costa', dataProc:'02/04/2026', horaProc:'08:00',
+      convenio:'SulAmérica', medico:'Dr. Roberto Lima',
+      materiais:'MCFL2,7X150R x 1', observacao:'', anexo:'' },
+    { id:'D5', protocol:'LOG-0005', status:'A', dataEnvio:'31/03/2026 11:00',
+      prioridade:'MÉDIA', tipo:'ELETIVO', hospital:'Beneficência Portuguesa',
+      paciente:'Claudia Ferreira Rocha', dataProc:'01/04/2026', horaProc:'15:30',
+      convenio:'Amil', medico:'Dra. Patricia Almeida',
+      materiais:'G-NB2-50_0 x 1', observacao:'Paciente diabética', anexo:'pedido_medico.pdf' }
+];
+
+function initDemo() {
+    if (!localStorage.getItem('log_seeded')) {
+        localStorage.setItem('log_data', JSON.stringify(DEMO));
+        localStorage.setItem('log_seq',  '6');
+        localStorage.setItem('log_seeded', '1');
+    }
+}
+function getData()     { return JSON.parse(localStorage.getItem('log_data') || '[]'); }
+function saveData(d)   { localStorage.setItem('log_data', JSON.stringify(d)); }
+function nextSeq()     { let s = parseInt(localStorage.getItem('log_seq')||'1'); localStorage.setItem('log_seq', s+1); return 'LOG-' + String(s).padStart(4,'0'); }
+
+// ════════════════════════════════════════
+// ESTADO
+// ════════════════════════════════════════
+const fd = { prioridade:'', tipo:'', hospital:'', paciente:'', dataProc:'',
+             horaProc:'', convenio:'', medico:'', materiais:'', observacao:'', anexo:'' };
+let filtroAtual = 'todos';
+let monInterval = null;
+let detId = null;
+
+// ─── Endpoint REST (Protheus) ───────────────────────────────────────
+const REST_URL = 'https://ciclomed161112.protheus.cloudtotvs.com.br:1557/rest03/WSLOGISTICA';
+
+// ════════════════════════════════════════
+// NAVEGAÇÃO
+// ════════════════════════════════════════
+function irPara(id) {
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById(id).classList.add('ativa');
+    window.scrollTo(0,0);
+}
+
+function iniciarFormulario() {
+    irPara('telaPrioridade');
+    document.getElementById('formHeader').style.display = 'block';
+    setProgress(1);
+}
+
+function irParaSplash() {
+    irPara('telaInicio');
+    document.getElementById('formHeader').style.display = 'none';
+    pararMonitor();
+}
+
+function abrirMonitor() {
+    irPara('telaMonitor');
+    document.getElementById('formHeader').style.display = 'none';
+    renderMonitor(); // renderiza demo/localStorage imediatamente
+    iniciarMonitor();
+    apiCarregar().then(() => renderMonitor()); // depois atualiza com Protheus
+}
+
+function novaSolicitacao() {
+    // Limpa estado
+    Object.keys(fd).forEach(k => fd[k] = '');
+    document.querySelectorAll('#rgPrioridade .radio-card, #rgTipo .radio-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('btnProxP').disabled = true;
+    document.getElementById('btnProxT').disabled = true;
+    ['fHospital','fPaciente','fDataProc','fHoraProc','fConvenio','fMedico','fMateriais','fObservacao'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('fArquivo').value = '';
+    document.getElementById('fArquivoNome').textContent = '';
+    document.getElementById('btnAnexo').classList.remove('has-file');
+    document.getElementById('btnAnexo').innerHTML = `
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        Carregar arquivo`;
+    iniciarFormulario();
+}
+
+function irStep(step) {
+    if (step === 1) { irPara('telaPrioridade'); setProgress(1); }
+    else if (step === 2) { irPara('telaTipo');  setProgress(2); }
+    else if (step === 3) {
+        const rep = fd.tipo === 'REPOSIÇÃO';
+        document.getElementById('detTitulo').textContent = fd.tipo;
+        const grups = ['grpPac','grpData','grpHora','grpConv','grpMed'];
+        grups.forEach(g => document.getElementById(g).style.display = rep ? 'none' : 'block');
+        if (rep) {
+            document.getElementById('lblHosp').innerHTML = '3. Hospital <span class="req">*</span>';
+            document.getElementById('lblMat').innerHTML  = '4. Materiais solicitados e qtde <span class="req">*</span>';
+            document.getElementById('lblObs').innerHTML  = '5. Observação';
+            document.getElementById('lblAnx').innerHTML  = '6. Anexo – (NÃO OBRIGATÓRIO)';
+        } else {
+            document.getElementById('lblHosp').innerHTML = '3. Hospital <span class="req">*</span>';
+            document.getElementById('lblMat').innerHTML  = '9. Materiais solicitados e qtde <span class="req">*</span>';
+            document.getElementById('lblObs').innerHTML  = '10. Observação';
+            document.getElementById('lblAnx').innerHTML  = '11. Anexo – (NÃO OBRIGATÓRIO)';
+        }
+        irPara('telaDetalhes'); setProgress(3);
+    }
+}
+
+function setProgress(step) {
+    document.getElementById('progressFill').style.width = (step/3*100) + '%';
+    document.getElementById('stepCounter').textContent  = 'Passo ' + step + ' de 3';
+}
+
+// ════════════════════════════════════════
+// FORMULÁRIO
+// ════════════════════════════════════════
+function selectOpt(campo, valor, el, groupId) {
+    fd[campo] = valor;
+    document.querySelectorAll('#' + groupId + ' .radio-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    if (campo === 'prioridade') document.getElementById('btnProxP').disabled = false;
+    if (campo === 'tipo')       document.getElementById('btnProxT').disabled = false;
+}
+
+function onArquivo(e) {
+    const f = e.target.files[0];
+    if (!f) return;
+    fd.anexo = f.name;
+    document.getElementById('fArquivoNome').textContent = '📎 ' + f.name;
+    const btn = document.getElementById('btnAnexo');
+    btn.classList.add('has-file');
+    btn.innerHTML = `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>${esc(f.name)}`;
+}
+
+async function enviar() {
+    fd.hospital   = document.getElementById('fHospital').value.trim();
+    fd.materiais  = document.getElementById('fMateriais').value.trim();
+    fd.observacao = document.getElementById('fObservacao').value.trim();
+    const rep = fd.tipo === 'REPOSIÇÃO';
+    if (!rep) {
+        fd.paciente  = document.getElementById('fPaciente').value.trim();
+        fd.dataProc  = document.getElementById('fDataProc').value;
+        fd.horaProc  = document.getElementById('fHoraProc').value;
+        fd.convenio  = document.getElementById('fConvenio').value.trim();
+        fd.medico    = document.getElementById('fMedico').value.trim();
+    } else {
+        fd.paciente = '-'; fd.dataProc = '-'; fd.horaProc = '-';
+        fd.convenio = '-'; fd.medico   = '-';
+    }
+    // Validação
+    const err = [];
+    if (!fd.hospital)  err.push('Hospital');
+    if (!fd.materiais) err.push('Materiais');
+    if (!rep) {
+        if (!fd.paciente) err.push('Paciente');
+        if (!fd.dataProc) err.push('Data do procedimento');
+        if (!fd.horaProc) err.push('Hora do procedimento');
+        if (!fd.convenio) err.push('Convênio');
+        if (!fd.medico)   err.push('Médico');
+    }
+    if (err.length) { toast('Preencha: ' + err.join(', '), 'error'); return; }
+
+    loading(true);
+    const dados = {
+        prioridade: fd.prioridade,    tipo:       fd.tipo,
+        hospital:   fd.hospital,      paciente:   fd.paciente,
+        dataProc:   fd.dataProc  || '-',
+        horaProc:   fd.horaProc  || '-',
+        convenio:   fd.convenio,      medico:     fd.medico,
+        materiais:  fd.materiais,     observacao: fd.observacao,
+        anexo:      fd.anexo || ''
+    };
+    let protocol = '';
+    try {
+        // Tenta enviar para o Protheus
+        const res = await apiIncluir(dados);
+        protocol  = res.protocol;
+        await apiCarregar(); // sincroniza localStorage com o banco
+    } catch(e) {
+        // Fallback offline: salva só no localStorage
+        console.warn('[WSLOGISTICA] fallback offline:', e.message);
+        protocol = nextSeq();
+        const data = getData();
+        data.unshift({
+            id: protocol, protocol, status: 'P', dataEnvio: fmtDT(new Date()),
+            ...dados,
+            dataProc: dados.dataProc !== '-' ? fmtDateBR(dados.dataProc) : '-'
+        });
+        saveData(data);
+    }
+    loading(false);
+    document.getElementById('formHeader').style.display = 'none';
+    document.getElementById('protocoloEnviado').textContent = protocol;
+    irPara('telaEnviado');
+    toast('✓ Solicitação ' + protocol + ' registrada!', 'success');
+}
+
+// ════════════════════════════════════════
+// MONITOR
+// ════════════════════════════════════════
+function renderMonitor(filtro) {
+    if (filtro !== undefined) filtroAtual = filtro;
+    const data = getData();
+
+    // Stats
+    const total  = data.length;
+    const pend   = data.filter(r => r.status === 'P').length;
+    const ok     = data.filter(r => r.status === 'A').length;
+    document.getElementById('svTotal').textContent = total;
+    document.getElementById('svPend').textContent  = pend;
+    document.getElementById('svOk').textContent    = ok;
+
+    // Filtra
+    let list = data;
+    if      (filtroAtual === 'pendentes')  list = data.filter(r => r.status === 'P');
+    else if (filtroAtual === 'atendidos')  list = data.filter(r => r.status === 'A');
+    else if (filtroAtual === 'urgentes')   list = data.filter(r => r.prioridade === 'URGENTE' && r.status === 'P');
+    else if (filtroAtual === 'eletivos')   list = data.filter(r => r.tipo === 'ELETIVO');
+    else if (filtroAtual === 'reservas')   list = data.filter(r => r.tipo === 'RESERVA');
+    else if (filtroAtual === 'reposicoes') list = data.filter(r => r.tipo === 'REPOSIÇÃO');
+
+    // Ordena: pendentes primeiro, depois pelo envio mais recente
+    list.sort((a,b) => {
+        if (a.status !== b.status) return a.status === 'P' ? -1 : 1;
+        return 0;
+    });
+
+    const c = document.getElementById('monList');
+    c.innerHTML = list.length
+        ? list.map(r => cardHTML(r)).join('')
+        : `<div class="empty-state">
+               <div class="empty-icon">📋</div>
+               <p>Nenhuma solicitação encontrada</p>
+               <small>Altere o filtro ou aguarde novas solicitações</small>
+           </div>`;
+
+    document.getElementById('lastUpd').textContent = 'Atualizado às ' + fmtHora(new Date());
+}
+
+function cardHTML(r) {
+    const pend     = r.status === 'P';
+    const bPrior   = r.prioridade === 'URGENTE' ? 'b-urg' : r.prioridade === 'MÉDIA' ? 'b-med' : 'b-baix';
+    const sbStatus = pend
+        ? '<span class="badge b-pend">● Pendente</span>'
+        : '<span class="badge b-ok">✓ Atendido</span>';
+
+    const pacRow   = r.paciente && r.paciente !== '-'
+        ? `<div class="req-paciente">
+               <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+               ${esc(r.paciente)}
+           </div>` : '';
+
+    const dateRow  = r.dataProc && r.dataProc !== '-'
+        ? `<div class="req-date">
+               <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+               ${esc(r.dataProc)}${r.horaProc !== '-' ? ' às ' + esc(r.horaProc) : ''}
+           </div>` : '';
+
+    return `
+    <div class="req-card ${pend ? 'pend' : 'ok'}" onclick="abrirDetalhe('${esc(r.id)}')">
+        <div class="req-inner">
+            <div class="req-top">
+                <div class="req-hospital">${esc(r.hospital)}</div>
+                <div class="req-protocol">${esc(r.protocol)}</div>
+            </div>
+            <div class="req-badges">
+                <span class="badge ${bPrior}">${esc(r.prioridade)}</span>
+                <span class="badge b-tipo">${esc(r.tipo)}</span>
+                ${sbStatus}
+            </div>
+            ${pacRow}
+            ${dateRow}
+            <div class="req-mats">${esc(r.materiais)}</div>
+            <div class="req-footer">Enviado: ${esc(r.dataEnvio)}</div>
+        </div>
+    </div>`;
+}
+
+function filtrar(f) {
+    filtroAtual = f;
+    document.querySelectorAll('.ftab').forEach(t => t.classList.toggle('active', t.dataset.f === f));
+    ['stTodos','stPend','stOk'].forEach(id => document.getElementById(id).classList.remove('active'));
+    if (f === 'todos')     document.getElementById('stTodos').classList.add('active');
+    if (f === 'pendentes') document.getElementById('stPend').classList.add('active');
+    if (f === 'atendidos') document.getElementById('stOk').classList.add('active');
+    renderMonitor();
+}
+
+function refreshMonitor() {
+    const btn = document.getElementById('btnRefresh');
+    btn.classList.add('spinning');
+    apiCarregar()
+        .then(() => { renderMonitor(); btn.classList.remove('spinning'); toast('Atualizado!','success'); })
+        .catch(()  => { renderMonitor(); btn.classList.remove('spinning'); });
+}
+
+function iniciarMonitor() {
+    pararMonitor();
+    monInterval = setInterval(() => apiCarregar().then(() => renderMonitor()), 30000);
+}
+function pararMonitor() {
+    if (monInterval) { clearInterval(monInterval); monInterval = null; }
+}
+
+// ════════════════════════════════════════
+// MODAL DETALHE
+// ════════════════════════════════════════
+function abrirDetalhe(id) {
+    const data = getData();
+    const r    = data.find(x => x.id === id);
+    if (!r) return;
+    detId = id;
+
+    document.getElementById('mdProto').textContent = r.protocol + ' · Enviado em ' + r.dataEnvio;
+    document.getElementById('mdHosp').textContent  = r.hospital;
+
+    const pend   = r.status === 'P';
+    const bPrior = r.prioridade === 'URGENTE' ? 'b-urg' : r.prioridade === 'MÉDIA' ? 'b-med' : 'b-baix';
+    const sbSt   = pend
+        ? '<span class="badge b-pend">● PENDENTE</span>'
+        : '<span class="badge b-ok">✓ ATENDIDO</span>';
+
+    const campos = [
+        { l:'Status',     v:sbSt,    html:true },
+        { l:'Prioridade', v:`<span class="badge ${bPrior}">${esc(r.prioridade)}</span>`, html:true },
+        { l:'Tipo',       v:r.tipo },
+        ...(r.paciente !== '-' ? [
+            { l:'Paciente',           v:r.paciente },
+            { l:'Data do Procedimento',v:r.dataProc + (r.horaProc !== '-' ? ' às ' + r.horaProc : '') },
+            { l:'Convênio',           v:r.convenio },
+            { l:'Médico',             v:r.medico },
+        ] : []),
+        { l:'Materiais Solicitados', v:r.materiais },
+        ...(r.observacao ? [{ l:'Observação', v:r.observacao }] : []),
+        ...(r.anexo       ? [{ l:'Anexo',      v:'📎 ' + r.anexo }] : []),
+    ];
+
+    document.getElementById('mdFields').innerHTML = campos.map(c => `
+        <div class="md-field">
+            <span class="md-field-lbl">${c.l}</span>
+            <span class="md-field-val">${c.html ? c.v : esc(c.v)}</span>
+        </div>`).join('');
+
+    document.getElementById('mdActs').innerHTML = pend
+        ? `<button class="btn btn-success" onclick="marcarAtendido()">
+               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+               Marcar como Atendido
+           </button>
+           <button class="btn btn-outline" onclick="fecharModal()">Fechar</button>`
+        : `<button class="btn btn-outline" onclick="reverterPendente()">↩ Reverter para Pendente</button>
+           <button class="btn btn-outline" onclick="fecharModal()">Fechar</button>`;
+
+    document.getElementById('modalDet').classList.add('show');
+}
+
+function fecharModal(e) {
+    if (!e || e.target === document.getElementById('modalDet')) {
+        document.getElementById('modalDet').classList.remove('show');
+        detId = null;
+    }
+}
+
+function marcarAtendido() {
+    setStatus('A');
+    toast('✓ Marcado como atendido!', 'success');
+}
+function reverterPendente() {
+    setStatus('P');
+    toast('↩ Revertido para pendente');
+}
+async function setStatus(s) {
+    const data = getData();
+    const idx  = data.findIndex(x => x.id === detId);
+    if (idx === -1) return;
+    // Atualiza localStorage imediatamente (otimistic update)
+    data[idx].status = s;
+    saveData(data);
+    fecharModal();
+    renderMonitor();
+    // Sincroniza com Protheus em background
+    try {
+        await apiAtualizar(detId, s);
+        await apiCarregar();
+        renderMonitor();
+    } catch(e) {
+        console.warn('[WSLOGISTICA]', e.message);
+    }
+}
+
+// ════════════════════════════════════════
+// REST API
+// ════════════════════════════════════════
+
+// Busca lista do Protheus e atualiza localStorage (fonte de verdade)
+async function apiCarregar() {
+    try {
+        const r = await fetch(REST_URL + '?acao=listar', { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        if (d.ok && Array.isArray(d.lista)) {
+            localStorage.setItem('log_data', JSON.stringify(d.lista));
+        }
+    } catch(e) {
+        console.warn('[WSLOGISTICA] offline, usando localStorage:', e.message);
+    }
+}
+
+// Envia nova solicitação para o Protheus
+async function apiIncluir(dados) {
+    const r = await fetch(REST_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acao: 'incluir', ...dados }),
+        signal: AbortSignal.timeout(12000)
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.msg || 'Erro no servidor');
+    return d; // { ok:true, protocol:"LOG-0001" }
+}
+
+// Atualiza status de uma solicitação no Protheus
+async function apiAtualizar(id, status) {
+    const r = await fetch(REST_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acao: 'atualizar', id, status }),
+        signal: AbortSignal.timeout(8000)
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+}
+
+// ════════════════════════════════════════
+// UTILITÁRIOS
+// ════════════════════════════════════════
+function fmtDateBR(iso) {
+    if (!iso) return '-';
+    const [y,m,d] = iso.split('-');
+    return d + '/' + m + '/' + y;
+}
+function fmtDT(date) {
+    const p = n => String(n).padStart(2,'0');
+    return p(date.getDate()) + '/' + p(date.getMonth()+1) + '/' + date.getFullYear()
+         + ' ' + p(date.getHours()) + ':' + p(date.getMinutes());
+}
+function fmtHora(date) {
+    return String(date.getHours()).padStart(2,'0') + ':' + String(date.getMinutes()).padStart(2,'0');
+}
+function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTmr = null;
+function toast(msg, type) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className   = 'toast' + (type ? ' ' + type : '');
+    el.classList.add('show');
+    if (toastTmr) clearTimeout(toastTmr);
+    toastTmr = setTimeout(() => el.classList.remove('show'), 3200);
+}
+function loading(show) {
+    document.getElementById('loading').classList.toggle('show', show);
+}
+function setSplashDate() {
+    document.getElementById('splashDate').textContent =
+        new Date().toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' });
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+(function init() {
+    initDemo();
+    setSplashDate();
+    const p = new URLSearchParams(window.location.search).get('pg');
+    if (p === 'monitor') abrirMonitor();
+})();
+</script>
+</body>
+</html>
