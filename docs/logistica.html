@@ -390,6 +390,63 @@
             .form-content { padding:32px 24px 80px; }
             .mon-list { padding:0 24px 100px; }
         }
+        /* ── MATERIAIS AUTOCOMPLETE ──────────────────────────── */
+        .mat-widget { position:relative; }
+        .mat-input-row { display:flex; gap:8px; align-items:stretch; }
+        .mat-ac-wrap { flex:1; position:relative; }
+        .mat-ac-wrap input {
+            width:100%; padding:14px 16px;
+            border:2px solid var(--gray-200); border-radius:var(--radius-sm);
+            font-size:15px; background:white;
+            transition:border-color .2s, box-shadow .2s;
+            color:var(--gray-900); font-family:inherit; -webkit-appearance:none;
+        }
+        .mat-ac-wrap input:focus {
+            outline:none; border-color:var(--primary);
+            box-shadow:0 0 0 3px rgba(27,122,61,.1);
+        }
+        .mat-dropdown {
+            display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
+            background:white; border:2px solid var(--primary);
+            border-radius:var(--radius-sm); box-shadow:var(--shadow-lg);
+            z-index:200; max-height:220px; overflow-y:auto;
+        }
+        .mat-dd-item {
+            padding:10px 14px; cursor:pointer;
+            border-bottom:1px solid var(--gray-100); transition:background .1s;
+        }
+        .mat-dd-item:last-child { border-bottom:none; }
+        .mat-dd-item:hover { background:var(--primary-light); }
+        .mat-dd-item strong { display:block; font-size:13px; color:var(--gray-900); font-weight:700; }
+        .mat-dd-item span   { font-size:11px; color:var(--gray-500); }
+        .mat-qtd {
+            width:76px; padding:14px 10px;
+            border:2px solid var(--gray-200); border-radius:var(--radius-sm);
+            font-size:15px; text-align:center; font-family:inherit;
+            -webkit-appearance:none; appearance:none;
+        }
+        .mat-qtd:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(27,122,61,.1); }
+        .mat-add-btn {
+            padding:0 18px; background:var(--primary); color:white;
+            border:none; border-radius:var(--radius-sm); font-size:22px;
+            font-weight:700; cursor:pointer; transition:background .15s; line-height:1;
+        }
+        .mat-add-btn:active { background:var(--primary-dark); }
+        .mat-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; min-height:0; }
+        .mat-chip {
+            display:inline-flex; align-items:center; gap:6px;
+            background:var(--primary-light); color:var(--primary-dark);
+            border-radius:20px; padding:6px 8px 6px 14px;
+            font-size:13px; font-weight:600;
+        }
+        .chip-qtd { color:var(--primary); }
+        .chip-del {
+            background:none; border:none; cursor:pointer;
+            color:var(--primary-dark); font-size:16px; line-height:1;
+            padding:0 2px; font-weight:700; font-family:inherit;
+        }
+        .chip-del:hover { color:var(--danger); }
+        .mat-hint { font-size:11px; color:var(--gray-400); margin-top:6px; }
     </style>
 </head>
 <body>
@@ -543,7 +600,19 @@
         <!-- Materiais -->
         <div class="form-group">
             <label id="lblMat">9. Materiais solicitados e qtde <span class="req">*</span></label>
-            <textarea id="fMateriais" placeholder="Ex: G-NB2-50_0 x 2, MCFL2,7X150R x 1"></textarea>
+            <div class="mat-widget">
+                <div class="mat-input-row">
+                    <div class="mat-ac-wrap">
+                        <input type="text" id="matInput" placeholder="Código ou nome do produto" autocomplete="off">
+                        <div class="mat-dropdown" id="matDropdown"></div>
+                    </div>
+                    <input type="number" class="mat-qtd" id="matQtd" min="1" value="1" title="Quantidade">
+                    <button type="button" class="mat-add-btn" onclick="adicionarMat()" title="Adicionar">+</button>
+                </div>
+                <div class="mat-chips" id="matChips"></div>
+                <div class="mat-hint" id="matHint">Digite o produto, informe a quantidade e clique em +</div>
+                <textarea id="fMateriais" style="display:none"></textarea>
+            </div>
         </div>
 
         <!-- Observação -->
@@ -762,9 +831,10 @@ function novaSolicitacao() {
     document.querySelectorAll('#rgPrioridade .radio-card, #rgTipo .radio-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('btnProxP').disabled = true;
     document.getElementById('btnProxT').disabled = true;
-    ['fHospital','fPaciente','fDataProc','fHoraProc','fConvenio','fMedico','fMateriais','fObservacao'].forEach(id => {
+    ['fHospital','fPaciente','fDataProc','fHoraProc','fConvenio','fMedico','fObservacao'].forEach(id => {
         document.getElementById(id).value = '';
     });
+    resetMatWidget();
     document.getElementById('fArquivo').value = '';
     document.getElementById('fArquivoNome').textContent = '';
     document.getElementById('btnAnexo').classList.remove('has-file');
@@ -1160,12 +1230,123 @@ function setSplashDate() {
         new Date().toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' });
 }
 
+// ── AUTOCOMPLETE MATERIAIS ────────────────────────────────────
+const PRODUTOS = [
+    { cod:'G-NB2-50_0',    desc:'Guia Nitinol 0.50mm 260cm' },
+    { cod:'MCFL2,7X150R',  desc:'Microcateter 2.7F 150cm Reto' },
+    { cod:'MCFL2,9X150A',  desc:'Microcateter 2.9F 150cm Angulado' },
+    { cod:'MCFL2,7X150A',  desc:'Microcateter 2.7F 150cm Angulado' },
+    { cod:'MCFL2,9X150R',  desc:'Microcateter 2.9F 150cm Reto' },
+    { cod:'G-NB2-35_0',    desc:'Guia Nitinol 0.35mm 260cm' },
+    { cod:'G-NB2-18_0',    desc:'Guia Nitinol 0.18mm 180cm' },
+    { cod:'INTRO-6F-11',   desc:'Introdutor 6F 11cm' },
+    { cod:'INTRO-7F-11',   desc:'Introdutor 7F 11cm' },
+    { cod:'INTRO-8F-11',   desc:'Introdutor 8F 11cm' },
+    { cod:'CAT-AR-5F-65',  desc:'Cateter Diagnóstico 5F 65cm' },
+    { cod:'CAT-AR-6F-90',  desc:'Cateter Diagnóstico 6F 90cm' },
+    { cod:'FIO-0035-145',  desc:'Fio Guia 0.035" 145cm' },
+    { cod:'FIO-0035-260',  desc:'Fio Guia 0.035" 260cm' },
+    { cod:'BALO-4X20',     desc:'Balão Angioplastia 4mm x 20mm' },
+    { cod:'BALO-5X20',     desc:'Balão Angioplastia 5mm x 20mm' },
+    { cod:'BALO-6X20',     desc:'Balão Angioplastia 6mm x 20mm' },
+];
+let produtosCache = [...PRODUTOS];
+let matItens = [];
+
+function initMatWidget() {
+    const input = document.getElementById('matInput');
+    const dd    = document.getElementById('matDropdown');
+    input.addEventListener('input', function() {
+        const q = this.value.trim().toLowerCase();
+        if (q.length < 2) { dd.style.display = 'none'; return; }
+        const hits = produtosCache.filter(p =>
+            p.cod.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)
+        ).slice(0, 8);
+        if (!hits.length) { dd.style.display = 'none'; return; }
+        dd.innerHTML = hits.map(p =>
+            '<div class="mat-dd-item" onmousedown="selecionarProd(event,\'' + p.cod.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">' +
+            '<strong>' + esc(p.cod) + '</strong><span>' + esc(p.desc) + '</span></div>'
+        ).join('');
+        dd.style.display = 'block';
+    });
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter')  { e.preventDefault(); adicionarMat(); }
+        if (e.key === 'Escape') { dd.style.display = 'none'; }
+    });
+    input.addEventListener('blur', function() {
+        setTimeout(() => { dd.style.display = 'none'; }, 200);
+    });
+    document.getElementById('matQtd').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); adicionarMat(); }
+    });
+    carregarProdutosREST();
+}
+
+function selecionarProd(e, cod) {
+    e.preventDefault();
+    document.getElementById('matInput').value = cod;
+    document.getElementById('matDropdown').style.display = 'none';
+    const q = document.getElementById('matQtd');
+    q.focus(); q.select();
+}
+
+async function carregarProdutosREST() {
+    try {
+        const r = await fetch(REST_URL + '?acao=produtos', { signal: AbortSignal.timeout(4000) });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (Array.isArray(j.produtos) && j.produtos.length) produtosCache = j.produtos;
+    } catch(_) { /* offline — usa lista estática */ }
+}
+
+function adicionarMat() {
+    const input = document.getElementById('matInput');
+    const qtdEl = document.getElementById('matQtd');
+    const cod   = input.value.trim();
+    const qtd   = Math.max(1, parseInt(qtdEl.value) || 1);
+    if (!cod) { input.focus(); return; }
+    matItens.push({ cod, qtd });
+    input.value = '';
+    qtdEl.value = 1;
+    document.getElementById('matDropdown').style.display = 'none';
+    renderMatChips();
+    input.focus();
+}
+
+function removerMat(idx) {
+    matItens.splice(idx, 1);
+    renderMatChips();
+}
+
+function renderMatChips() {
+    const wrap = document.getElementById('matChips');
+    const hint = document.getElementById('matHint');
+    wrap.innerHTML = matItens.map((it, i) =>
+        '<div class="mat-chip">' +
+        '<span class="chip-cod">' + esc(it.cod) + '</span>' +
+        '<span class="chip-qtd">x ' + it.qtd + '</span>' +
+        '<button type="button" class="chip-del" onclick="removerMat(' + i + ')">\u00d7</button>' +
+        '</div>'
+    ).join('');
+    document.getElementById('fMateriais').value = matItens.map(it => it.cod + ' x ' + it.qtd).join(', ');
+    hint.style.display = matItens.length ? 'none' : 'block';
+}
+
+function resetMatWidget() {
+    matItens = [];
+    document.getElementById('matInput').value = '';
+    document.getElementById('matQtd').value = 1;
+    document.getElementById('matDropdown').style.display = 'none';
+    renderMatChips();
+}
+
 // ════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════
 (function init() {
     initDemo();
     setSplashDate();
+    initMatWidget();
     const p = new URLSearchParams(window.location.search).get('pg');
     if (p === 'monitor') abrirMonitor();
 })();
