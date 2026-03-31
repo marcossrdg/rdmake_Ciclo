@@ -1439,38 +1439,19 @@ function resetVendWidget() {
     document.getElementById('vendDropdown').style.display = 'none';
 }
 
-// ── HOSPITAL AUTOCOMPLETE ────────────────────────────────────────────
-const HOSPITAIS = [
-    { cod:'001', nome:'Hospital Sírio-Libanês' },
-    { cod:'002', nome:'Hospital Albert Einstein' },
-    { cod:'003', nome:'Hospital das Clínicas – SP' },
-    { cod:'004', nome:'Hospital Santa Catarina' },
-    { cod:'005', nome:'Beneficência Portuguesa' },
-    { cod:'006', nome:'Hospital Alemão Oswaldo Cruz' },
-    { cod:'007', nome:'Hospital São Luiz' },
-    { cod:'008', nome:'Hospital Leforte' },
-    { cod:'009', nome:'Hospital Nove de Julho' },
-    { cod:'010', nome:'Hospital Samaritano' },
-];
-let hospCache = [...HOSPITAIS];
+// ── HOSPITAL AUTOCOMPLETE (live search SA1) ──────────────────────────
+let _hospTimer = null;
 
 function initHospWidget() {
     const nomeEl = document.getElementById('fHospNome');
     const dd     = document.getElementById('hospDropdown');
 
     nomeEl.addEventListener('input', function() {
-        const q = this.value.trim().toLowerCase();
+        const q = this.value.trim();
+        clearTimeout(_hospTimer);
+        document.getElementById('fHospital').value = q;
         if (q.length < 2) { dd.style.display = 'none'; return; }
-        const hits = hospCache.filter(h =>
-            h.nome.toLowerCase().includes(q)
-        ).slice(0, 6);
-        if (!hits.length) { dd.style.display = 'none'; return; }
-        dd.innerHTML = hits.map(h =>
-            '<div class="hosp-dd-item" onmousedown="selecionarHosp(event,\'' +
-            h.cod.replace(/'/g,"\\'") + '\',\'' + h.nome.replace(/'/g,"\\'") + '\')">' +
-            '<span>' + esc(h.nome) + '</span></div>'
-        ).join('');
-        dd.style.display = 'block';
+        _hospTimer = setTimeout(() => buscarHospitais(q), 300);
     });
     nomeEl.addEventListener('blur', function() {
         setTimeout(() => { dd.style.display = 'none'; }, 200);
@@ -1479,7 +1460,30 @@ function initHospWidget() {
     nomeEl.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') dd.style.display = 'none';
     });
-    carregarHospitaisREST();
+}
+
+async function buscarHospitais(q) {
+    const dd = document.getElementById('hospDropdown');
+    let hits = [];
+    try {
+        const r = await fetch(
+            REST_URL + '?acao=hospitais&q=' + encodeURIComponent(q),
+            { headers: { 'Authorization': AUTH }, signal: AbortSignal.timeout(5000) }
+        );
+        if (r.ok) {
+            const j = await r.json();
+            if (Array.isArray(j.hospitais)) hits = j.hospitais;
+        }
+    } catch(_) { /* offline */ }
+
+    if (!hits.length) { dd.style.display = 'none'; return; }
+
+    dd.innerHTML = hits.map(h =>
+        '<div class="hosp-dd-item" onmousedown="selecionarHosp(event,\'' +
+        h.cod.replace(/'/g,"\\'") + '\',\'' + h.nome.replace(/'/g,"\\'") + '\')">' +
+        '<span>' + esc(h.nome) + '</span></div>'
+    ).join('');
+    dd.style.display = 'block';
 }
 
 function selecionarHosp(e, cod, nome) {
@@ -1492,18 +1496,6 @@ function selecionarHosp(e, cod, nome) {
 function sincronizarHospital() {
     const nome = document.getElementById('fHospNome').value.trim();
     document.getElementById('fHospital').value = nome;
-}
-
-async function carregarHospitaisREST() {
-    try {
-        const r = await fetch(REST_URL + '?acao=hospitais', {
-            headers: { 'Authorization': AUTH },
-            signal: AbortSignal.timeout(4000)
-        });
-        if (!r.ok) return;
-        const j = await r.json();
-        if (Array.isArray(j.hospitais) && j.hospitais.length) hospCache = j.hospitais;
-    } catch(_) { /* offline – usa lista estática */ }
 }
 
 function resetHospWidget() {

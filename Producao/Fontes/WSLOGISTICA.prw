@@ -59,7 +59,7 @@ WSMETHOD GET WSRECEIVE acao, status, tipo, q WSSERVICE WSLOGISTICA
         ::SetResponse(fListarProdutos(AllTrim(::q)))
         Return .T.
     ElseIf cAcao == "HOSPITAIS"
-        ::SetResponse(fListarHospitais())
+        ::SetResponse(fListarHospitais(AllTrim(::q)))
         Return .T.
     ElseIf cAcao == "VENDEDORES"
         ::SetResponse(fListarVendedores(AllTrim(::q)))
@@ -244,7 +244,7 @@ Return cJson
 //=====================================================================
 // fListarHospitais - Retorna JSON com clientes do SA1
 //=====================================================================
-Static Function fListarHospitais()
+Static Function fListarHospitais(cQ)
 
     Local cJson  := ""
     Local cQry   := ""
@@ -254,10 +254,13 @@ Static Function fListarHospitais()
     Local cItem  := ""
     Local cFil   := xFilial("SA1")
 
-    cQry  := " SELECT TOP 1000 RTRIM(A1_COD) AS COD, RTRIM(A1_NOME) AS NOME "
+    cQry  := " SELECT TOP 30 RTRIM(A1_COD) AS COD, RTRIM(A1_NOME) AS NOME "
     cQry  += " FROM SA1010 WITH (NOLOCK) "
     cQry  += " WHERE D_E_L_E_T_ = ' ' "
     cQry  += " AND A1_FILIAL = '" + cFil + "' "
+    If !Empty(cQ)
+        cQry += " AND UPPER(A1_NOME) LIKE '%" + Upper(fSqlStr(cQ)) + "%' "
+    EndIf
     cQry  += " ORDER BY A1_NOME "
 
     dbUseArea(.T., "TOPCONN", TCGenQry(,,cQry), cAlias, .F., .T.)
