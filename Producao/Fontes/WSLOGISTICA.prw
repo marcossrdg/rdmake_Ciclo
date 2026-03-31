@@ -25,6 +25,7 @@ WSRESTFUL WSLOGISTICA DESCRIPTION "API Logistica CicloMed - Solicitacoes Cirurgi
     WSDATA acao   AS STRING
     WSDATA status AS STRING
     WSDATA tipo   AS STRING
+    WSDATA q      AS STRING
 
     WSMETHOD GET  DESCRIPTION "Listar solicitacoes"         WSSYNTAX "/WSLOGISTICA?acao=listar[&status=P|A][&tipo=E|R|P]"
     WSMETHOD POST DESCRIPTION "Incluir ou atualizar"        WSSYNTAX "/WSLOGISTICA"
@@ -38,7 +39,7 @@ END WSRESTFUL
 //   ?acao=listar&status=A     -> Atendidos
 //   ?acao=listar&tipo=E       -> Por tipo
 //=====================================================================
-WSMETHOD GET WSRECEIVE acao, status, tipo WSSERVICE WSLOGISTICA
+WSMETHOD GET WSRECEIVE acao, status, tipo, q WSSERVICE WSLOGISTICA
 
     Local cAcao   := Upper(AllTrim(::acao))
     Local cStatus := Upper(AllTrim(::status))
@@ -50,7 +51,7 @@ WSMETHOD GET WSRECEIVE acao, status, tipo WSSERVICE WSLOGISTICA
         ::SetResponse(fListarLog(cStatus, cTipo))
         Return .T.
     ElseIf cAcao == "PRODUTOS"
-        ::SetResponse(fListarProdutos())
+        ::SetResponse(fListarProdutos(AllTrim(::q)))
         Return .T.
     ElseIf cAcao == "HOSPITAIS"
         ::SetResponse(fListarHospitais())
@@ -178,7 +179,7 @@ Return cJson
 //=====================================================================
 // fListarProdutos - Retorna JSON com todos os produtos do SB1
 //=====================================================================
-Static Function fListarProdutos()
+Static Function fListarProdutos(cQ)
 
     Local cJson  := ""
     Local cQry   := ""
@@ -187,11 +188,16 @@ Static Function fListarProdutos()
     Local aItens := {}
     Local cItem  := ""
     Local cFil   := xFilial("SB1")
+    Local nTop   := iif(Empty(cQ), 500, 50)
 
-    cQry  := " SELECT TOP 2000 RTRIM(B1_COD) AS COD, RTRIM(B1_DESC) AS DSCRI "
+    cQry  := " SELECT TOP " + cValToChar(nTop) + " RTRIM(B1_COD) AS COD, RTRIM(B1_DESC) AS DSCRI "
     cQry  += " FROM SB1010 WITH (NOLOCK) "
     cQry  += " WHERE D_E_L_E_T_ = ' ' "
     cQry  += " AND B1_FILIAL = '" + cFil + "' "
+    If !Empty(cQ)
+        cQry += " AND (UPPER(B1_DESC) LIKE '%" + Upper(fSqlStr(cQ)) + "%' "
+        cQry += "      OR UPPER(B1_COD)  LIKE '%" + Upper(fSqlStr(cQ)) + "%') "
+    EndIf
     cQry  += " ORDER BY B1_DESC "
 
     dbUseArea(.T., "TOPCONN", TCGenQry(,,cQry), cAlias, .F., .T.)

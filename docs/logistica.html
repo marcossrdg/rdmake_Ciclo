@@ -1515,30 +1515,18 @@ const PRODUTOS = [
     { cod:'EMBOS-100-300', desc:'Microesferas Embolizantes 100-300um' },
     { cod:'EMBOS-300-500', desc:'Microesferas Embolizantes 300-500um' },
 ];
-let produtosCache = [...PRODUTOS];
 let matItens = [];
+let _matTimer = null;
+let _restOk   = null; // null=não testado, true=ok, false=offline
 
 function initMatWidget() {
     const input = document.getElementById('matInput');
     const dd    = document.getElementById('matDropdown');
     input.addEventListener('input', function() {
-        const q = this.value.trim().toLowerCase();
+        const q = this.value.trim();
+        clearTimeout(_matTimer);
         if (q.length < 2) { dd.style.display = 'none'; return; }
-        const hits = produtosCache.filter(p =>
-            p.desc.toLowerCase().includes(q)
-        ).slice(0, 8);
-        if (!hits.length) {
-            dd.innerHTML = '<div class="mat-dd-item mat-dd-livre" onmousedown="usarTextoLivre(event)">' +
-                '<span style="color:var(--gray-500);font-size:13px">Não encontrado na lista — clique aqui ou em <strong>+ Adicionar item</strong> para incluir assim mesmo:</span>' +
-                '<strong style="display:block;margin-top:4px">' + esc(this.value.trim()) + '</strong></div>';
-            dd.style.display = 'block';
-            return;
-        }
-        dd.innerHTML = hits.map(p =>
-            '<div class="mat-dd-item" onmousedown="selecionarProd(event,\'' + p.cod.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\',\'' + p.desc.replace(/'/g,"\\'") + '\')">' +
-            '<strong>' + esc(p.desc) + '</strong><span style="color:var(--gray-400);font-size:10px">' + esc(p.cod) + '</span></div>'
-        ).join('');
-        dd.style.display = 'block';
+        _matTimer = setTimeout(() => buscarProdutos(q), 300);
     });
     input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter')  { e.preventDefault(); adicionarMat(); }
@@ -1550,7 +1538,53 @@ function initMatWidget() {
     document.getElementById('matQtd').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') { e.preventDefault(); adicionarMat(); }
     });
-    carregarProdutosREST();
+}
+
+async function buscarProdutos(q) {
+    const dd    = document.getElementById('matDropdown');
+    const input = document.getElementById('matInput');
+    let hits = [];
+
+    // Tenta REST (Protheus SB1) se ainda não marcado como offline
+    if (_restOk !== false) {
+        try {
+            const r = await fetch(
+                REST_URL + '?acao=produtos&q=' + encodeURIComponent(q),
+                { signal: AbortSignal.timeout(4000) }
+            );
+            if (r.ok) {
+                const j = await r.json();
+                if (Array.isArray(j.produtos)) {
+                    hits = j.produtos;
+                    _restOk = true;
+                }
+            }
+        } catch(_) { _restOk = false; }
+    }
+
+    // Fallback: lista estática local
+    if (_restOk === false) {
+        hits = PRODUTOS.filter(p =>
+            p.desc.toUpperCase().includes(q.toUpperCase())
+        ).slice(0, 10);
+    }
+
+    if (!hits.length) {
+        dd.innerHTML = '<div class="mat-dd-item" style="background:#fff8e1" onmousedown="usarTextoLivre(event)">' +
+            '<span style="font-size:12px;color:#888">Não encontrado — pressione <strong>Enter</strong> ou clique em <strong>+ Adicionar item</strong> para incluir:</span>' +
+            '<strong style="display:block;margin-top:4px;color:#333">' + esc(input.value.trim()) + '</strong></div>';
+        dd.style.display = 'block';
+        return;
+    }
+    dd.innerHTML = hits.map(p =>
+        '<div class="mat-dd-item" onmousedown="selecionarProd(event,\'' +
+        (p.cod||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\',\'' +
+        p.desc.replace(/'/g,"\\'") + '\')">' +
+        '<strong>' + esc(p.desc) + '</strong>' +
+        (p.cod ? '<span style="color:var(--gray-400);font-size:10px">' + esc(p.cod) + '</span>' : '') +
+        '</div>'
+    ).join('');
+    dd.style.display = 'block';
 }
 
 function selecionarProd(e, cod, desc) {
@@ -1564,20 +1598,9 @@ function selecionarProd(e, cod, desc) {
 
 function usarTextoLivre(e) {
     e.preventDefault();
-    const input = document.getElementById('matInput');
-    input.dataset.cod = '';
+    document.getElementById('matInput').dataset.cod = '';
     document.getElementById('matDropdown').style.display = 'none';
-    const q = document.getElementById('matQtd');
-    q.focus(); q.select();
-}
-
-async function carregarProdutosREST() {
-    try {
-        const r = await fetch(REST_URL + '?acao=produtos', { signal: AbortSignal.timeout(4000) });
-        if (!r.ok) return;
-        const j = await r.json();
-        if (Array.isArray(j.produtos) && j.produtos.length) produtosCache = j.produtos;
-    } catch(_) { /* offline — usa lista estática */ }
+    document.getElementById('matQtd').focus();
 }
 
 function adicionarMat() {
