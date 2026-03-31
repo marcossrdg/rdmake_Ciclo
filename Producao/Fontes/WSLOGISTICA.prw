@@ -49,9 +49,15 @@ WSMETHOD GET WSRECEIVE acao, status, tipo WSSERVICE WSLOGISTICA
     If cAcao == "LISTAR" .Or. Empty(cAcao)
         ::SetResponse(fListarLog(cStatus, cTipo))
         Return .T.
+    ElseIf cAcao == "PRODUTOS"
+        ::SetResponse(fListarProdutos())
+        Return .T.
+    ElseIf cAcao == "HOSPITAIS"
+        ::SetResponse(fListarHospitais())
+        Return .T.
     EndIf
 
-    ::SetResponse('{"ok":false,"msg":"Acao invalida. Use: listar"}')
+    ::SetResponse('{"ok":false,"msg":"Acao invalida. Use: listar, produtos, hospitais"}')
 Return .T.
 
 //=====================================================================
@@ -163,6 +169,82 @@ Static Function fListarLog(cStatus, cTipo)
     RestArea(aArea)
 
     cJson  := '{"ok":true,"total":' + cValToChar(Len(aItens)) + ',"lista":['
+    cJson  += aStrJoin(aItens, ",")
+    cJson  += ']}'
+
+Return cJson
+
+
+//=====================================================================
+// fListarProdutos - Retorna JSON com todos os produtos do SB1
+//=====================================================================
+Static Function fListarProdutos()
+
+    Local cJson  := ""
+    Local cQry   := ""
+    Local cAlias := GetNextAlias()
+    Local aArea  := GetArea()
+    Local aItens := {}
+    Local cItem  := ""
+    Local cFil   := xFilial("SB1")
+
+    cQry  := " SELECT TOP 2000 RTRIM(B1_COD) AS COD, RTRIM(B1_DESC) AS DSCRI "
+    cQry  += " FROM SB1010 WITH (NOLOCK) "
+    cQry  += " WHERE D_E_L_E_T_ = ' ' "
+    cQry  += " AND B1_FILIAL = '" + cFil + "' "
+    cQry  += " ORDER BY B1_DESC "
+
+    dbUseArea(.T., "TOPCONN", TCGenQry(,,cQry), cAlias, .F., .T.)
+
+    While !(cAlias)->(Eof())
+        cItem  := '{"cod":"'  + fJStr(AllTrim((cAlias)->COD))   + '",'
+        cItem  += '"desc":"'  + fJStr(AllTrim((cAlias)->DSCRI)) + '"}'
+        aAdd(aItens, cItem)
+        (cAlias)->(dbSkip())
+    EndDo
+
+    (cAlias)->(dbCloseArea())
+    RestArea(aArea)
+
+    cJson  := '{"ok":true,"total":' + cValToChar(Len(aItens)) + ',"produtos":['
+    cJson  += aStrJoin(aItens, ",")
+    cJson  += ']}'
+
+Return cJson
+
+
+//=====================================================================
+// fListarHospitais - Retorna JSON com clientes do SA1
+//=====================================================================
+Static Function fListarHospitais()
+
+    Local cJson  := ""
+    Local cQry   := ""
+    Local cAlias := GetNextAlias()
+    Local aArea  := GetArea()
+    Local aItens := {}
+    Local cItem  := ""
+    Local cFil   := xFilial("SA1")
+
+    cQry  := " SELECT TOP 1000 RTRIM(A1_COD) AS COD, RTRIM(A1_NOME) AS NOME "
+    cQry  += " FROM SA1010 WITH (NOLOCK) "
+    cQry  += " WHERE D_E_L_E_T_ = ' ' "
+    cQry  += " AND A1_FILIAL = '" + cFil + "' "
+    cQry  += " ORDER BY A1_NOME "
+
+    dbUseArea(.T., "TOPCONN", TCGenQry(,,cQry), cAlias, .F., .T.)
+
+    While !(cAlias)->(Eof())
+        cItem  := '{"cod":"'  + fJStr(AllTrim((cAlias)->COD))  + '",'
+        cItem  += '"nome":"'  + fJStr(AllTrim((cAlias)->NOME)) + '"}'
+        aAdd(aItens, cItem)
+        (cAlias)->(dbSkip())
+    EndDo
+
+    (cAlias)->(dbCloseArea())
+    RestArea(aArea)
+
+    cJson  := '{"ok":true,"total":' + cValToChar(Len(aItens)) + ',"hospitais":['
     cJson  += aStrJoin(aItens, ",")
     cJson  += ']}'
 

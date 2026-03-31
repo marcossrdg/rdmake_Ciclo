@@ -1478,23 +1478,42 @@ function imprimirPedido(id) {
 
 // ── AUTOCOMPLETE MATERIAIS ────────────────────────────────────
 const PRODUTOS = [
+    // Colas cirúrgicas
+    { cod:'GLUBRAN2-050',  desc:'Cola Cirurgica Glubran 2 0.50ml' },
+    { cod:'GLUBRAN2-100',  desc:'Cola Cirurgica Glubran 2 1ml' },
+    { cod:'GLUBRAN2-200',  desc:'Cola Cirurgica Glubran 2 2ml' },
+    { cod:'GLUBRAN2-500',  desc:'Cola Cirurgica Glubran 2 5ml' },
+    // Guias
     { cod:'G-NB2-50_0',    desc:'Guia Nitinol 0.50mm 260cm' },
+    { cod:'G-NB2-35_0',    desc:'Guia Nitinol 0.35mm 260cm' },
+    { cod:'G-NB2-18_0',    desc:'Guia Nitinol 0.18mm 180cm' },
+    { cod:'FIO-0035-145',  desc:'Fio Guia 0.035" 145cm' },
+    { cod:'FIO-0035-260',  desc:'Fio Guia 0.035" 260cm' },
+    // Microcateteres
     { cod:'MCFL2,7X150R',  desc:'Microcateter 2.7F 150cm Reto' },
     { cod:'MCFL2,9X150A',  desc:'Microcateter 2.9F 150cm Angulado' },
     { cod:'MCFL2,7X150A',  desc:'Microcateter 2.7F 150cm Angulado' },
     { cod:'MCFL2,9X150R',  desc:'Microcateter 2.9F 150cm Reto' },
-    { cod:'G-NB2-35_0',    desc:'Guia Nitinol 0.35mm 260cm' },
-    { cod:'G-NB2-18_0',    desc:'Guia Nitinol 0.18mm 180cm' },
+    // Introdutores
     { cod:'INTRO-6F-11',   desc:'Introdutor 6F 11cm' },
     { cod:'INTRO-7F-11',   desc:'Introdutor 7F 11cm' },
     { cod:'INTRO-8F-11',   desc:'Introdutor 8F 11cm' },
-    { cod:'CAT-AR-5F-65',  desc:'Cateter Diagnóstico 5F 65cm' },
-    { cod:'CAT-AR-6F-90',  desc:'Cateter Diagnóstico 6F 90cm' },
-    { cod:'FIO-0035-145',  desc:'Fio Guia 0.035" 145cm' },
-    { cod:'FIO-0035-260',  desc:'Fio Guia 0.035" 260cm' },
-    { cod:'BALO-4X20',     desc:'Balão Angioplastia 4mm x 20mm' },
-    { cod:'BALO-5X20',     desc:'Balão Angioplastia 5mm x 20mm' },
-    { cod:'BALO-6X20',     desc:'Balão Angioplastia 6mm x 20mm' },
+    // Cateteres diagnósticos
+    { cod:'CAT-AR-5F-65',  desc:'Cateter Diagnostico 5F 65cm' },
+    { cod:'CAT-AR-6F-90',  desc:'Cateter Diagnostico 6F 90cm' },
+    // Balões
+    { cod:'BALO-4X20',     desc:'Balao Angioplastia 4mm x 20mm' },
+    { cod:'BALO-5X20',     desc:'Balao Angioplastia 5mm x 20mm' },
+    { cod:'BALO-6X20',     desc:'Balao Angioplastia 6mm x 20mm' },
+    // Micromolas / espirais
+    { cod:'MOLA-3X6',      desc:'Micromola Espiral 3mm x 6cm' },
+    { cod:'MOLA-5X10',     desc:'Micromola Espiral 5mm x 10cm' },
+    // Stents
+    { cod:'STENT-6X37',    desc:'Stent Coronario 6mm x 37mm' },
+    { cod:'STENT-8X40',    desc:'Stent Coronario 8mm x 40mm' },
+    // Agentes embolizantes
+    { cod:'EMBOS-100-300', desc:'Microesferas Embolizantes 100-300um' },
+    { cod:'EMBOS-300-500', desc:'Microesferas Embolizantes 300-500um' },
 ];
 let produtosCache = [...PRODUTOS];
 let matItens = [];
@@ -1508,7 +1527,13 @@ function initMatWidget() {
         const hits = produtosCache.filter(p =>
             p.desc.toLowerCase().includes(q)
         ).slice(0, 8);
-        if (!hits.length) { dd.style.display = 'none'; return; }
+        if (!hits.length) {
+            dd.innerHTML = '<div class="mat-dd-item mat-dd-livre" onmousedown="usarTextoLivre(event)">' +
+                '<span style="color:var(--gray-500);font-size:13px">Não encontrado na lista — clique aqui ou em <strong>+ Adicionar item</strong> para incluir assim mesmo:</span>' +
+                '<strong style="display:block;margin-top:4px">' + esc(this.value.trim()) + '</strong></div>';
+            dd.style.display = 'block';
+            return;
+        }
         dd.innerHTML = hits.map(p =>
             '<div class="mat-dd-item" onmousedown="selecionarProd(event,\'' + p.cod.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\',\'' + p.desc.replace(/'/g,"\\'") + '\')">' +
             '<strong>' + esc(p.desc) + '</strong><span style="color:var(--gray-400);font-size:10px">' + esc(p.cod) + '</span></div>'
@@ -1532,6 +1557,15 @@ function selecionarProd(e, cod, desc) {
     e.preventDefault();
     document.getElementById('matInput').value = desc;
     document.getElementById('matInput').dataset.cod = cod;
+    document.getElementById('matDropdown').style.display = 'none';
+    const q = document.getElementById('matQtd');
+    q.focus(); q.select();
+}
+
+function usarTextoLivre(e) {
+    e.preventDefault();
+    const input = document.getElementById('matInput');
+    input.dataset.cod = '';
     document.getElementById('matDropdown').style.display = 'none';
     const q = document.getElementById('matQtd');
     q.focus(); q.select();
