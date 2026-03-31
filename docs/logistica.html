@@ -656,12 +656,9 @@
         <div class="form-group">
             <label id="lblHosp">3. Hospital <span class="req">*</span></label>
             <div class="hosp-widget">
-                <div class="hosp-row">
-                    <input type="text" class="hosp-cod" id="fHospCod" placeholder="Código" maxlength="10" autocomplete="off">
-                    <div class="hosp-nome-wrap">
-                        <input type="text" id="fHospNome" placeholder="Nome do hospital" autocomplete="off">
-                        <div class="hosp-dropdown" id="hospDropdown"></div>
-                    </div>
+                <div class="hosp-nome-wrap">
+                    <input type="text" id="fHospNome" placeholder="Digite o nome do hospital" autocomplete="off">
+                    <div class="hosp-dropdown" id="hospDropdown"></div>
                 </div>
                 <input type="hidden" id="fHospital">
             </div>
@@ -703,7 +700,7 @@
             <div class="mat-widget">
                 <div class="mat-input-row">
                     <div class="mat-prod-row">
-                        <input type="text" id="matInput" placeholder="Digite o código ou nome do produto" autocomplete="off">
+                        <input type="text" id="matInput" placeholder="Digite a descrição do produto (ex: COLA, CATETER...)" autocomplete="off">
                         <div class="mat-dropdown" id="matDropdown"></div>
                     </div>
                     <div class="mat-qtd-row">
@@ -1371,7 +1368,6 @@ const HOSPITAIS = [
 let hospCache = [...HOSPITAIS];
 
 function initHospWidget() {
-    const codEl  = document.getElementById('fHospCod');
     const nomeEl = document.getElementById('fHospNome');
     const dd     = document.getElementById('hospDropdown');
 
@@ -1379,42 +1375,36 @@ function initHospWidget() {
         const q = this.value.trim().toLowerCase();
         if (q.length < 2) { dd.style.display = 'none'; return; }
         const hits = hospCache.filter(h =>
-            h.nome.toLowerCase().includes(q) || h.cod.toLowerCase().includes(q)
+            h.nome.toLowerCase().includes(q)
         ).slice(0, 6);
         if (!hits.length) { dd.style.display = 'none'; return; }
         dd.innerHTML = hits.map(h =>
             '<div class="hosp-dd-item" onmousedown="selecionarHosp(event,\'' +
             h.cod.replace(/'/g,"\\'") + '\',\'' + h.nome.replace(/'/g,"\\'") + '\')">' +
-            '<strong>' + esc(h.cod) + '</strong><span>' + esc(h.nome) + '</span></div>'
+            '<span>' + esc(h.nome) + '</span></div>'
         ).join('');
         dd.style.display = 'block';
     });
     nomeEl.addEventListener('blur', function() {
         setTimeout(() => { dd.style.display = 'none'; }, 200);
-        sincronizarHospital();
+        document.getElementById('fHospital').value = this.value.trim();
     });
-    codEl.addEventListener('input', function() {
-        const q = this.value.trim().toLowerCase();
-        const h = hospCache.find(x => x.cod.toLowerCase() === q);
-        if (h) { nomeEl.value = h.nome; }
-        sincronizarHospital();
+    nomeEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') dd.style.display = 'none';
     });
-    codEl.addEventListener('blur', sincronizarHospital);
     carregarHospitaisREST();
 }
 
 function selecionarHosp(e, cod, nome) {
     e.preventDefault();
-    document.getElementById('fHospCod').value  = cod;
     document.getElementById('fHospNome').value = nome;
+    document.getElementById('fHospital').value = nome;
     document.getElementById('hospDropdown').style.display = 'none';
-    sincronizarHospital();
 }
 
 function sincronizarHospital() {
-    const cod  = document.getElementById('fHospCod').value.trim();
     const nome = document.getElementById('fHospNome').value.trim();
-    document.getElementById('fHospital').value = cod ? cod + ' – ' + nome : nome;
+    document.getElementById('fHospital').value = nome;
 }
 
 async function carregarHospitaisREST() {
@@ -1427,7 +1417,6 @@ async function carregarHospitaisREST() {
 }
 
 function resetHospWidget() {
-    document.getElementById('fHospCod').value  = '';
     document.getElementById('fHospNome').value = '';
     document.getElementById('fHospital').value = '';
     document.getElementById('hospDropdown').style.display = 'none';
@@ -1517,12 +1506,12 @@ function initMatWidget() {
         const q = this.value.trim().toLowerCase();
         if (q.length < 2) { dd.style.display = 'none'; return; }
         const hits = produtosCache.filter(p =>
-            p.cod.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)
+            p.desc.toLowerCase().includes(q)
         ).slice(0, 8);
         if (!hits.length) { dd.style.display = 'none'; return; }
         dd.innerHTML = hits.map(p =>
-            '<div class="mat-dd-item" onmousedown="selecionarProd(event,\'' + p.cod.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">' +
-            '<strong>' + esc(p.cod) + '</strong><span>' + esc(p.desc) + '</span></div>'
+            '<div class="mat-dd-item" onmousedown="selecionarProd(event,\'' + p.cod.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\',\'' + p.desc.replace(/'/g,"\\'") + '\')">' +
+            '<strong>' + esc(p.desc) + '</strong><span style="color:var(--gray-400);font-size:10px">' + esc(p.cod) + '</span></div>'
         ).join('');
         dd.style.display = 'block';
     });
@@ -1539,9 +1528,10 @@ function initMatWidget() {
     carregarProdutosREST();
 }
 
-function selecionarProd(e, cod) {
+function selecionarProd(e, cod, desc) {
     e.preventDefault();
-    document.getElementById('matInput').value = cod;
+    document.getElementById('matInput').value = desc;
+    document.getElementById('matInput').dataset.cod = cod;
     document.getElementById('matDropdown').style.display = 'none';
     const q = document.getElementById('matQtd');
     q.focus(); q.select();
@@ -1559,11 +1549,13 @@ async function carregarProdutosREST() {
 function adicionarMat() {
     const input = document.getElementById('matInput');
     const qtdEl = document.getElementById('matQtd');
-    const cod   = input.value.trim();
+    const desc  = input.value.trim();
+    const cod   = input.dataset.cod || desc; // usa cod do produto se selecionado, senão usa o texto digitado
     const qtd   = Math.max(1, parseInt(qtdEl.value) || 1);
-    if (!cod) { input.focus(); return; }
-    matItens.push({ cod, qtd });
+    if (!desc) { input.focus(); return; }
+    matItens.push({ cod, desc, qtd });
     input.value = '';
+    input.dataset.cod = '';
     qtdEl.value = 1;
     document.getElementById('matDropdown').style.display = 'none';
     renderMatChips();
@@ -1580,7 +1572,7 @@ function renderMatChips() {
     const hint = document.getElementById('matHint');
     wrap.innerHTML = matItens.map((it, i) =>
         '<div class="mat-chip">' +
-        '<span class="chip-cod">' + esc(it.cod) + '</span>' +
+        '<span class="chip-cod">' + esc(it.desc) + '</span>' +
         '<span class="chip-qtd">x ' + it.qtd + '</span>' +
         '<button type="button" class="chip-del" onclick="removerMat(' + i + ')">\u00d7</button>' +
         '</div>'
