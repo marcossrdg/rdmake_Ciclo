@@ -390,6 +390,92 @@
             .form-content { padding:32px 24px 80px; }
             .mon-list { padding:0 24px 100px; }
         }
+        /* ── HOSPITAL AUTOCOMPLETE ──────────────────────────── */
+        .hosp-widget { position:relative; }
+        .hosp-row { display:flex; gap:8px; }
+        .hosp-cod {
+            width:110px; flex-shrink:0; padding:14px 12px;
+            border:2px solid var(--gray-200); border-radius:var(--radius-sm);
+            font-size:15px; font-weight:700; text-transform:uppercase;
+            font-family:inherit; background:white; color:var(--gray-900);
+            -webkit-appearance:none;
+        }
+        .hosp-cod:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(27,122,61,.1); }
+        .hosp-nome-wrap { flex:1; position:relative; }
+        .hosp-nome-wrap input {
+            width:100%; padding:14px 16px;
+            border:2px solid var(--gray-200); border-radius:var(--radius-sm);
+            font-size:15px; background:white; font-family:inherit;
+            color:var(--gray-900); -webkit-appearance:none;
+            transition:border-color .2s, box-shadow .2s;
+        }
+        .hosp-nome-wrap input:focus {
+            outline:none; border-color:var(--primary);
+            box-shadow:0 0 0 3px rgba(27,122,61,.1);
+        }
+        .hosp-dropdown {
+            display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
+            background:white; border:2px solid var(--primary);
+            border-radius:var(--radius-sm); box-shadow:var(--shadow-lg);
+            z-index:200; max-height:200px; overflow-y:auto;
+        }
+        .hosp-dd-item {
+            padding:10px 14px; cursor:pointer;
+            border-bottom:1px solid var(--gray-100); transition:background .1s;
+        }
+        .hosp-dd-item:last-child { border-bottom:none; }
+        .hosp-dd-item:hover { background:var(--primary-light); }
+        .hosp-dd-item strong { font-size:12px; color:var(--gray-900); font-weight:700; }
+        .hosp-dd-item span   { font-size:13px; color:var(--gray-600); margin-left:8px; }
+
+        /* ── IMPRIMIR ──────────────────────────────────────────── */
+        .btn-print {
+            display:inline-flex; align-items:center; gap:8px;
+            padding:13px 24px; background:white;
+            color:var(--gray-700); border:2px solid var(--gray-300);
+            border-radius:var(--radius-sm); font-size:14px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:all .15s;
+        }
+        .btn-print:hover { border-color:var(--primary); color:var(--primary); }
+        @media print {
+            body > *:not(#printArea) { display:none !important; }
+            #printArea { display:block !important; }
+        }
+        #printArea {
+            display:none;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size:12px; color:#000;
+        }
+        .print-header {
+            display:flex; justify-content:space-between; align-items:center;
+            border-bottom:2px solid #1b7a3d; padding-bottom:10px; margin-bottom:14px;
+        }
+        .print-title { font-size:18px; font-weight:800; color:#1b7a3d; }
+        .print-proto { font-size:22px; font-weight:900; color:#1b7a3d; }
+        .print-prior {
+            display:inline-block; padding:4px 14px; border-radius:20px;
+            font-weight:800; font-size:13px;
+        }
+        .prior-U { background:#fee2e2; color:#991b1b; }
+        .prior-M { background:#fef3c7; color:#92400e; }
+        .prior-B { background:#dbeafe; color:#1e40af; }
+        .print-section { font-weight:700; font-size:11px; text-transform:uppercase;
+            letter-spacing:1px; color:#555; margin:14px 0 6px; border-bottom:1px solid #eee; padding-bottom:4px; }
+        .print-row { display:flex; gap:6px; margin-bottom:5px; }
+        .print-lbl { min-width:160px; color:#555; font-weight:600; }
+        .print-val { font-weight:600; color:#111; }
+        .print-mats { margin-top:6px; }
+        .print-mat-item { padding:6px 10px; border:1px solid #ddd; border-radius:6px;
+            margin-bottom:4px; display:flex; justify-content:space-between; }
+        .print-mat-cod   { font-weight:700; }
+        .print-mat-qtd   { color:#1b7a3d; font-weight:800; font-size:14px; }
+        .print-assinatura {
+            margin-top:32px; display:flex; justify-content:space-between; gap:24px;
+        }
+        .print-assbox { flex:1; border-top:1px solid #999;
+            padding-top:6px; font-size:11px; color:#555; text-align:center; }
+        @page { margin:15mm; }
+
         /* ── MATERIAIS AUTOCOMPLETE ──────────────────────────── */
         .mat-widget { position:relative; }
         .mat-input-row { display:flex; gap:8px; align-items:stretch; }
@@ -564,7 +650,16 @@
         <!-- Hospital -->
         <div class="form-group">
             <label id="lblHosp">3. Hospital <span class="req">*</span></label>
-            <input type="text" id="fHospital" placeholder="Nome do hospital">
+            <div class="hosp-widget">
+                <div class="hosp-row">
+                    <input type="text" class="hosp-cod" id="fHospCod" placeholder="Código" maxlength="10" autocomplete="off">
+                    <div class="hosp-nome-wrap">
+                        <input type="text" id="fHospNome" placeholder="Nome do hospital" autocomplete="off">
+                        <div class="hosp-dropdown" id="hospDropdown"></div>
+                    </div>
+                </div>
+                <input type="hidden" id="fHospital">
+            </div>
         </div>
 
         <!-- Paciente (hidden for REPOSIÇÃO) -->
@@ -659,6 +754,10 @@
                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                 Nova Solicitação
             </button>
+            <button class="btn-print" id="btnPrintSucesso" onclick="imprimirPedido(null)">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm1-4h.01"/></svg>
+                Imprimir / Salvar PDF
+            </button>
             <button class="link-monitor" onclick="abrirMonitor()">🖥️ Ver Monitor de Solicitações</button>
         </div>
     </div>
@@ -740,6 +839,9 @@
         <div class="md-actions"   id="mdActs"></div>
     </div>
 </div>
+
+<!-- Área de impressão (oculta na tela, visível só no print) -->
+<div id="printArea"></div>
 
 <script>
 // ════════════════════════════════════════
@@ -835,6 +937,7 @@ function novaSolicitacao() {
         document.getElementById(id).value = '';
     });
     resetMatWidget();
+    resetHospWidget();
     document.getElementById('fArquivo').value = '';
     document.getElementById('fArquivoNome').textContent = '';
     document.getElementById('btnAnexo').classList.remove('has-file');
@@ -952,6 +1055,9 @@ async function enviar() {
     loading(false);
     document.getElementById('formHeader').style.display = 'none';
     document.getElementById('protocoloEnviado').textContent = protocol;
+    // Guarda o pedido para impressão direta da tela de sucesso
+    _lastPedido = { ...dados, id: protocol, protocol, status: 'P', dataEnvio: fmtDT(new Date()),
+        dataProc: dados.dataProc !== '-' ? fmtDateBR(dados.dataProc) : '-' };
     irPara('telaEnviado');
     toast('✓ Solicitação ' + protocol + ' registrada!', 'success');
 }
@@ -1107,8 +1213,16 @@ function abrirDetalhe(id) {
                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                Marcar como Atendido
            </button>
+           <button class="btn-print" onclick="imprimirPedido(detId)">
+               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm1-4h.01"/></svg>
+               Imprimir / PDF
+           </button>
            <button class="btn btn-outline" onclick="fecharModal()">Fechar</button>`
         : `<button class="btn btn-outline" onclick="reverterPendente()">↩ Reverter para Pendente</button>
+           <button class="btn-print" onclick="imprimirPedido(detId)">
+               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2zm1-4h.01"/></svg>
+               Imprimir / PDF
+           </button>
            <button class="btn btn-outline" onclick="fecharModal()">Fechar</button>`;
 
     document.getElementById('modalDet').classList.add('show');
@@ -1230,6 +1344,138 @@ function setSplashDate() {
         new Date().toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' });
 }
 
+// ── HOSPITAL AUTOCOMPLETE ────────────────────────────────────────────
+const HOSPITAIS = [
+    { cod:'001', nome:'Hospital Sírio-Libanês' },
+    { cod:'002', nome:'Hospital Albert Einstein' },
+    { cod:'003', nome:'Hospital das Clínicas – SP' },
+    { cod:'004', nome:'Hospital Santa Catarina' },
+    { cod:'005', nome:'Beneficência Portuguesa' },
+    { cod:'006', nome:'Hospital Alemão Oswaldo Cruz' },
+    { cod:'007', nome:'Hospital São Luiz' },
+    { cod:'008', nome:'Hospital Leforte' },
+    { cod:'009', nome:'Hospital Nove de Julho' },
+    { cod:'010', nome:'Hospital Samaritano' },
+];
+let hospCache = [...HOSPITAIS];
+
+function initHospWidget() {
+    const codEl  = document.getElementById('fHospCod');
+    const nomeEl = document.getElementById('fHospNome');
+    const dd     = document.getElementById('hospDropdown');
+
+    nomeEl.addEventListener('input', function() {
+        const q = this.value.trim().toLowerCase();
+        if (q.length < 2) { dd.style.display = 'none'; return; }
+        const hits = hospCache.filter(h =>
+            h.nome.toLowerCase().includes(q) || h.cod.toLowerCase().includes(q)
+        ).slice(0, 6);
+        if (!hits.length) { dd.style.display = 'none'; return; }
+        dd.innerHTML = hits.map(h =>
+            '<div class="hosp-dd-item" onmousedown="selecionarHosp(event,\'' +
+            h.cod.replace(/'/g,"\\'") + '\',\'' + h.nome.replace(/'/g,"\\'") + '\')">' +
+            '<strong>' + esc(h.cod) + '</strong><span>' + esc(h.nome) + '</span></div>'
+        ).join('');
+        dd.style.display = 'block';
+    });
+    nomeEl.addEventListener('blur', function() {
+        setTimeout(() => { dd.style.display = 'none'; }, 200);
+        sincronizarHospital();
+    });
+    codEl.addEventListener('input', function() {
+        const q = this.value.trim().toLowerCase();
+        const h = hospCache.find(x => x.cod.toLowerCase() === q);
+        if (h) { nomeEl.value = h.nome; }
+        sincronizarHospital();
+    });
+    codEl.addEventListener('blur', sincronizarHospital);
+    carregarHospitaisREST();
+}
+
+function selecionarHosp(e, cod, nome) {
+    e.preventDefault();
+    document.getElementById('fHospCod').value  = cod;
+    document.getElementById('fHospNome').value = nome;
+    document.getElementById('hospDropdown').style.display = 'none';
+    sincronizarHospital();
+}
+
+function sincronizarHospital() {
+    const cod  = document.getElementById('fHospCod').value.trim();
+    const nome = document.getElementById('fHospNome').value.trim();
+    document.getElementById('fHospital').value = cod ? cod + ' – ' + nome : nome;
+}
+
+async function carregarHospitaisREST() {
+    try {
+        const r = await fetch(REST_URL + '?acao=hospitais', { signal: AbortSignal.timeout(4000) });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (Array.isArray(j.hospitais) && j.hospitais.length) hospCache = j.hospitais;
+    } catch(_) { /* offline – usa lista estática */ }
+}
+
+function resetHospWidget() {
+    document.getElementById('fHospCod').value  = '';
+    document.getElementById('fHospNome').value = '';
+    document.getElementById('fHospital').value = '';
+    document.getElementById('hospDropdown').style.display = 'none';
+}
+
+// ── IMPRESSÃO / PDF ───────────────────────────────────────────────────
+let _lastPedido = null;
+
+function imprimirPedido(id) {
+    let r;
+    if (id) {
+        r = getData().find(x => x.id === id);
+    } else {
+        r = _lastPedido;
+    }
+    if (!r) { toast('Pedido não encontrado', 'error'); return; }
+
+    const priorCls = r.prioridade === 'URGENTE' ? 'prior-U' : r.prioridade === 'MÉDIA' ? 'prior-M' : 'prior-B';
+    const itens  = r.materiais.split(',').map(s => s.trim()).filter(Boolean);
+    const itenHTML = itens.map(it => {
+        const m = it.match(/^(.+?)\s+x\s+(\d+)$/i);
+        if (m) return `<div class="print-mat-item"><span class="print-mat-cod">${esc(m[1].trim())}</span><span class="print-mat-qtd">x ${m[2]}</span></div>`;
+        return `<div class="print-mat-item"><span class="print-mat-cod">${esc(it)}</span></div>`;
+    }).join('');
+
+    const hoje = new Date().toLocaleString('pt-BR');
+    const infoProc = r.paciente && r.paciente !== '-'
+        ? `<div class="print-row"><span class="print-lbl">Paciente:</span><span class="print-val">${esc(r.paciente)}</span></div>
+           <div class="print-row"><span class="print-lbl">Data/Hora Procedimento:</span><span class="print-val">${esc(r.dataProc)}${r.horaProc !== '-' ? ' às ' + esc(r.horaProc) : ''}</span></div>
+           <div class="print-row"><span class="print-lbl">Convênio:</span><span class="print-val">${esc(r.convenio)}</span></div>
+           <div class="print-row"><span class="print-lbl">Médico:</span><span class="print-val">${esc(r.medico)}</span></div>`
+        : '';
+    const obs = r.observacao ? `<div class="print-section">OBSERVAÇÃO</div><p style="margin:4px 0 0 2px">${esc(r.observacao)}</p>` : '';
+
+    document.getElementById('printArea').innerHTML = `
+        <div class="print-header">
+            <div>
+                <div class="print-title">SEPARAÇÃO DE MATERIAIS — CicloMed</div>
+                <div style="font-size:12px;color:#555;margin-top:4px;">Emitido em: ${hoje}</div>
+            </div>
+            <div class="print-proto">${esc(r.protocol)}</div>
+        </div>
+        <div class="print-row"><span class="print-lbl">Prioridade:</span>
+            <span class="print-val"><span class="print-prior ${priorCls}">${esc(r.prioridade)}</span></span></div>
+        <div class="print-row"><span class="print-lbl">Tipo:</span><span class="print-val">${esc(r.tipo)}</span></div>
+        <div class="print-row"><span class="print-lbl">Hospital:</span><span class="print-val">${esc(r.hospital)}</span></div>
+        ${infoProc}
+        ${obs}
+        <div class="print-section">MATERIAIS SOLICITADOS</div>
+        <div class="print-mats">${itenHTML}</div>
+        <div class="print-assinatura">
+            <div class="print-assbox">Solicitante</div>
+            <div class="print-assbox">Separador</div>
+            <div class="print-assbox">Conferência</div>
+        </div>`;
+
+    window.print();
+}
+
 // ── AUTOCOMPLETE MATERIAIS ────────────────────────────────────
 const PRODUTOS = [
     { cod:'G-NB2-50_0',    desc:'Guia Nitinol 0.50mm 260cm' },
@@ -1347,6 +1593,7 @@ function resetMatWidget() {
     initDemo();
     setSplashDate();
     initMatWidget();
+    initHospWidget();
     const p = new URLSearchParams(window.location.search).get('pg');
     if (p === 'monitor') abrirMonitor();
 })();
