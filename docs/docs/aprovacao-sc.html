@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <script>
-// Redireciona para a URL correta mantendo todos os parametros
-window.location.replace(
-    window.location.href.replace('/docs/docs/', '/docs/')
-);
+// Redireciona /rdmake_Ciclo/docs/aprovacao-sc.html -> /rdmake_Ciclo/aprovacao-sc.html
+var url = window.location.href;
+url = url.replace('/rdmake_Ciclo/docs/aprovacao-sc.html', '/rdmake_Ciclo/aprovacao-sc.html');
+window.location.replace(url);
 </script>
 </head>
 <body></body>
