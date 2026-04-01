@@ -241,40 +241,56 @@
                 + '&fil=' + encodeURIComponent(fil)
                 + '&token=' + encodeURIComponent(token);
 
-            // Usa XMLHttpRequest para compatibilidade com Safari/Apple
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', apiUrl, true);
-            xhr.setRequestHeader('Authorization', 'Basic ' + btoa('admin:c1c2c3c4'));
-            xhr.onload = function() {
-                var body = xhr.responseText;
+            // Faz a chamada com autenticação
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Basic ' + btoa('admin:v1v2v3v4')
+                }
+            })
+            .then(function(response) {
+                return response.text().then(function(text) {
+                    return { status: response.status, body: text };
+                });
+            })
+            .then(function(data) {
+                var body = data.body;
+
+                // Extrai titulo e mensagem do HTML retornado pelo Protheus
                 var titleMatch = body.match(/<h1[^>]*>([^<]+)<\/h1>/i);
                 var msgMatch   = body.match(/<p[^>]*color:#666[^>]*>([^<]+)<\/p>/i);
+
                 var title   = titleMatch ? titleMatch[1] : '';
                 var message = msgMatch   ? msgMatch[1]   : '';
 
-                if (xhr.status === 200 && body.indexOf('#27ae60') !== -1) {
+                // Determina tipo do resultado
+                if (data.status === 200 && body.indexOf('#27ae60') !== -1) {
+                    // Sucesso (aprovado/rejeitado com sucesso)
                     showResult('success', title || (acaoTexto + ' Realizado!'),
                         message || ('PC ' + pc + ' - ' + itemTexto + ' processado com sucesso.'));
                 } else if (body.indexOf('#c0392b') !== -1) {
+                    // Erro (token inválido, já processado, etc.)
                     showResult('error', title || 'Erro',
                         message || 'Não foi possível processar a solicitação.');
                 } else if (body.indexOf('#e67e22') !== -1) {
+                    // Warning
                     showResult('warning', title || 'Atenção',
                         message || body.replace(/<[^>]+>/g, '').substring(0, 200));
-                } else if (xhr.status === 200) {
+                } else if (data.status === 200) {
+                    // Sucesso genérico
                     showResult('success', title || 'Processado!',
                         message || 'Solicitação processada com sucesso.');
                 } else {
-                    showResult('error', 'Erro ' + xhr.status,
+                    // Erro genérico
+                    showResult('error', 'Erro ' + data.status,
                         message || 'Erro ao processar a solicitação. Tente novamente.');
                 }
-            };
-            xhr.onerror = function() {
+            })
+            .catch(function(error) {
                 showResult('error', 'Erro de Conexão',
                     'Não foi possível conectar ao servidor Protheus.',
-                    'Tente novamente ou acesse SIGACOM > Liberação de Pedidos (MATA126).');
-            };
-            xhr.send();
+                    'Erro: ' + error.message + '. Tente novamente ou acesse SIGACOM > Liberação de Pedidos (MATA126).');
+            });
 
             function showResult(type, title, message, detail) {
                 var loadingEl = document.getElementById('loading');
