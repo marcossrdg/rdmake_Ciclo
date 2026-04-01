@@ -1,13 +1,316 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<script>
-// Redireciona /rdmake_Ciclo/docs/aprovacao-sc.html -> /rdmake_Ciclo/aprovacao-sc.html
-var url = window.location.href;
-url = url.replace('/rdmake_Ciclo/docs/aprovacao-sc.html', '/rdmake_Ciclo/aprovacao-sc.html');
-window.location.replace(url);
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CicloMed - Aprovação de Solicitação de Compras</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a3a4a 0%, #0d1f2d 100%);
+            color: #fff;
+            padding: 20px;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .logo-svg {
+            width: 180px;
+            height: auto;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: #1a5276;
+            padding: 20px 25px;
+            text-align: center;
+        }
+
+        .card-header h2 {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 30px 25px;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e0e0e0;
+            border-top: 4px solid #1a5276;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .loading-detail {
+            color: #999;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .result-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 32px;
+            color: #fff;
+        }
+
+        .icon-success { background: #27ae60; }
+        .icon-error   { background: #c0392b; }
+        .icon-warning { background: #e67e22; }
+
+        .result-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .title-success { color: #27ae60; }
+        .title-error   { color: #c0392b; }
+        .title-warning { color: #e67e22; }
+
+        .result-message {
+            color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .result-detail {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .footer {
+            margin-top: 20px;
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .sc-info {
+            background: #f0f7ff;
+            border: 1px solid #d0e3f7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .sc-info table { width: 100%; }
+
+        .sc-info td {
+            padding: 3px 8px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .sc-info td:first-child {
+            font-weight: 600;
+            color: #1a5276;
+            width: 70px;
+        }
+
+        .acao-aprovar { color: #27ae60; font-weight: 700; }
+        .acao-rejeitar { color: #c0392b; font-weight: 700; }
+    </style>
 </head>
-<body></body>
+<body>
+
+    <div class="logo-container">
+        <svg class="logo-svg" viewBox="0 0 220 80" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 55 40 A 25 25 0 1 1 55 39.99" fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="145 12" />
+            <circle cx="78" cy="23" r="3" fill="#fff" />
+            <text x="110" y="48" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="28" font-weight="300" fill="#fff" letter-spacing="1">
+                CicloMed
+            </text>
+        </svg>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 id="headerTitle">Aprovação de Solicitação de Compras</h2>
+        </div>
+        <div class="card-body">
+            <!-- Estado: Loading -->
+            <div id="loading">
+                <div id="scInfo" class="sc-info" style="display:none;"></div>
+                <div class="spinner"></div>
+                <div class="loading-text">Processando sua solicitação...</div>
+                <div class="loading-detail">Aguarde enquanto registramos no sistema.</div>
+            </div>
+
+            <!-- Estado: Resultado -->
+            <div id="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        CicloMed &mdash; Transformando a Saúde com Inovação e Excelência
+    </div>
+
+    <script>
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            var sc    = params.get('sc')    || '';
+            var item  = params.get('item')  || '';
+            var acao  = params.get('acao')  || '';
+            var fil   = params.get('fil')   || '';
+            var token = params.get('token') || '';
+
+            var acaoTexto = acao === 'A' ? 'Aprovar' : 'Rejeitar';
+            var itemTexto = item === 'ALL' ? 'Todos os itens' : ('Item ' + item);
+
+            // Mostra info da SC enquanto carrega
+            var scInfoEl = document.getElementById('scInfo');
+            if (sc) {
+                scInfoEl.style.display = 'block';
+                scInfoEl.innerHTML =
+                    '<table>' +
+                    '<tr><td>SC:</td><td><strong>' + sc + '</strong></td></tr>' +
+                    '<tr><td>Item:</td><td>' + itemTexto + '</td></tr>' +
+                    '<tr><td>Ação:</td><td class="' + (acao === 'A' ? 'acao-aprovar' : 'acao-rejeitar') + '">' +
+                    (acao === 'A' ? '✓ ' : '✗ ') + acaoTexto + '</td></tr>' +
+                    '</table>';
+            }
+
+            // Atualiza header
+            document.getElementById('headerTitle').textContent =
+                acaoTexto + ' Solicitação de Compras';
+
+            // Validação básica
+            if (!sc || !acao || !fil || !token) {
+                showResult('warning', 'Parâmetros Inválidos',
+                    'A URL de aprovação está incompleta ou foi corrompida.',
+                    'Verifique o link no email e tente novamente.');
+                return;
+            }
+
+            // Monta URL da API — rest03 tem acesso a todas as filiais (mesmo endpoint do WSAPROVPC)
+            var apiUrl = 'https://ciclomed161112.protheus.cloudtotvs.com.br:1557/rest03/WSAPROVSC'
+                + '?sc='    + encodeURIComponent(sc)
+                + '&item='  + encodeURIComponent(item)
+                + '&acao='  + encodeURIComponent(acao)
+                + '&fil='   + encodeURIComponent(fil)
+                + '&token=' + encodeURIComponent(token);
+
+            // Faz a chamada com autenticação Basic
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Basic ' + btoa('admin:v1v2v3v4')
+                }
+            })
+            .then(function(response) {
+                return response.text().then(function(text) {
+                    return { status: response.status, body: text };
+                });
+            })
+            .then(function(data) {
+                var body = data.body;
+
+                // Tenta extrair mensagem de erro JSON do Protheus (ex: {"code":500,"message":"..."})
+                var jsonTitle = '', jsonMsg = '';
+                try {
+                    var json = JSON.parse(body);
+                    if (json.message || json.errorMessage) {
+                        jsonTitle = 'Erro ' + (json.code || json.errorCode || data.status);
+                        jsonMsg   = json.message || json.errorMessage || '';
+                    }
+                } catch(e) {}
+
+                // Extrai titulo e mensagem do HTML retornado pelo Protheus
+                var titleMatch = body.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+                var msgMatch   = body.match(/<p[^>]*color:#666[^>]*>([^<]+)<\/p>/i);
+
+                var title   = titleMatch ? titleMatch[1] : (jsonTitle || '');
+                var message = msgMatch   ? msgMatch[1]   : (jsonMsg   || '');
+
+                if (data.status === 200 && body.indexOf('#27ae60') !== -1) {
+                    showResult('success', title || (acaoTexto + ' Realizado!'),
+                        message || ('SC ' + sc + ' - ' + itemTexto + ' processado com sucesso.'));
+                } else if (body.indexOf('#c0392b') !== -1) {
+                    showResult('error', title || 'Não Processado',
+                        message || 'Não foi possível processar a solicitação.',
+                        'Verifique se o item já foi aprovado/rejeitado anteriormente ou acesse SIGACOM > Solicitações de Compras (MATA110).');
+                } else if (body.indexOf('#e67e22') !== -1) {
+                    showResult('warning', title || 'Atenção',
+                        message || body.replace(/<[^>]+>/g, '').substring(0, 200),
+                        'Acesse SIGACOM > Solicitações de Compras (MATA110) para verificar o status do item.');
+                } else if (jsonTitle) {
+                    showResult('error', jsonTitle,
+                        jsonMsg || 'Erro interno no servidor Protheus.',
+                        'Código: ' + data.status + '. Contate o administrador do sistema se o problema persistir.');
+                } else if (data.status === 200) {
+                    showResult('success', title || 'Processado!',
+                        message || 'Solicitação processada com sucesso.');
+                } else {
+                    showResult('error', 'Erro ' + data.status,
+                        message || 'Erro ao processar a solicitação.',
+                        'Acesse SIGACOM > Solicitações de Compras (MATA110) para verificar o status ou contate o suporte.');
+                }
+            })
+            .catch(function(error) {
+                showResult('error', 'Erro de Conexão',
+                    'Não foi possível conectar ao servidor Protheus.',
+                    'Erro: ' + error.message + '. Tente novamente ou acesse SIGACOM > Solicitações de Compras (MATA100).');
+            });
+
+            function showResult(type, title, message, detail) {
+                var loadingEl = document.getElementById('loading');
+                var resultEl  = document.getElementById('result');
+                var icons = { success: '✓', error: '✗', warning: '!' };
+
+                loadingEl.style.display = 'none';
+                resultEl.style.display  = 'block';
+
+                resultEl.innerHTML =
+                    '<div class="result-icon icon-' + type + '">' + icons[type] + '</div>' +
+                    '<div class="result-title title-' + type + '">' + title + '</div>' +
+                    '<div class="result-message">' + message + '</div>' +
+                    (detail ? '<div class="result-detail">' + detail + '</div>' : '');
+            }
+        })();
+    </script>
+</body>
 </html>
